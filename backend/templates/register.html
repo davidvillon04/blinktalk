@@ -10,7 +10,7 @@
 ">
   <h2 style="margin-bottom: 0.5rem;">Create an account</h2>
 
-  <!-- Display flash messages (if any) -->
+  <!-- Display flash messages -->
   {% with messages = get_flashed_messages() %}
     {% if messages %}
       <div class="flash-messages">
@@ -22,8 +22,7 @@
   {% endwith %}
 
   <!-- Registration Form -->
-  <!-- Note: Using 'type="text"' for email to avoid default HTML5 popups. We'll do custom validation. -->
-  <form method="POST" style="display: flex; flex-direction: column; gap: 1rem;" novalidate>
+  <form method="POST" id="registerForm" style="display: flex; flex-direction: column; gap: 1rem;" novalidate>
     <!-- Email -->
     <div>
       <label for="email" style="display: block; margin-bottom: 0.3rem;">
@@ -34,14 +33,11 @@
         id="email" 
         name="email" 
         placeholder="Email"
+        value="{{ form_data.get('email', '') }}"
         style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;"
         required
       >
-      <!-- Custom email error message -->
-      <div 
-        id="emailError" 
-        style="font-size: 0.9em; margin-top: 4px; color: #ffaaaa; display: none;"
-      ></div>
+      <div id="emailError" style="font-size: 0.9em; margin-top: 4px; color: #ffaaaa; display: none;"></div>
     </div>
 
     <!-- Username -->
@@ -54,16 +50,15 @@
         id="username" 
         name="username" 
         placeholder="Username"
+        value="{{ form_data.get('username', '') }}"
         style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;"
         required
       >
-      <!-- Username Hint (hidden until focus) -->
-      <div 
-        id="usernameHint" 
-        style="font-size: 0.9em; margin-top: 4px; color: #ffaaaa; display: none;"
-      >
-        Username must be 2-32 characters long and can only contain letters, 
-        numbers, underscores (_) and periods (.).
+      <div id="usernameHint" style="font-size: 0.9em; margin-top: 4px; color: #ffaaaa; display: none;">
+        Username must be 2-32 characters long and can only contain letters, numbers, underscores (_) and periods (.).
+      </div>
+      <div id="usernameExists" style="font-size: 0.9em; margin-top: 4px; color: #ff4444; display: none;">
+        This username is already taken.
       </div>
     </div>
 
@@ -72,7 +67,6 @@
       <label for="password" style="display: block; margin-bottom: 0.3rem;">
         PASSWORD <span style="color: #ffaaaa;">*</span>
       </label>
-      <!-- Inline-flex container for password input + toggle button -->
       <div style="display: inline-flex; align-items: center; position: relative; width: 100%;">
         <input 
           type="password" 
@@ -84,7 +78,7 @@
             padding: 0.5rem;
             border-radius: 4px;
             border: 1px solid #ccc;
-            padding-right: 3rem; /* space for the toggle button */
+            padding-right: 3rem;
           "
           required
         >
@@ -103,8 +97,6 @@
           Show
         </button>
       </div>
-
-      <!-- Password Strength Meter (hidden until focus) -->
       <div id="passwordStrengthContainer" style="margin-top: 5px; display: none;">
         <meter max="100" id="passwordMeter" value="0" style="width: 100%;"></meter>
         <div id="passwordStrengthText" style="font-size: 0.9em; margin-top: 3px;"></div>
@@ -116,7 +108,6 @@
       <label for="confirm" style="display: block; margin-bottom: 0.3rem;">
         CONFIRM PASSWORD <span style="color: #ffaaaa;">*</span>
       </label>
-      <!-- Inline-flex container for confirm password + toggle button -->
       <div style="display: inline-flex; align-items: center; position: relative; width: 100%;">
         <input 
           type="password" 
@@ -128,7 +119,7 @@
             padding: 0.5rem;
             border-radius: 4px;
             border: 1px solid #ccc;
-            padding-right: 3rem; /* space for the toggle button */
+            padding-right: 3rem;
           "
           required
         >
@@ -147,11 +138,7 @@
           Show
         </button>
       </div>
-      <!-- Mismatch error message -->
-      <div 
-        id="confirmError" 
-        style="font-size: 0.9em; margin-top: 4px; color: #ffaaaa; display: none;"
-      ></div>
+      <div id="confirmError" style="font-size: 0.9em; margin-top: 4px; color: #ff4444; display: none;"></div>
     </div>
 
     <!-- Date of Birth -->
@@ -160,46 +147,30 @@
         DATE OF BIRTH <span style="color: #ffaaaa;">*</span>
       </label>
       <div style="display: flex; gap: 0.5rem;">
-        <!-- Month -->
-        <select 
-          id="month" 
-          name="month" 
-          style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;"
-          required
-        >
+        <select id="month" name="month" required style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;">
           <option value="" disabled selected>Month</option>
-          <option value="1">January</option>
-          <option value="2">February</option>
-          <option value="3">March</option>
-          <option value="4">April</option>
-          <option value="5">May</option>
-          <option value="6">June</option>
-          <option value="7">July</option>
-          <option value="8">August</option>
-          <option value="9">September</option>
-          <option value="10">October</option>
-          <option value="11">November</option>
-          <option value="12">December</option>
+          <option value="1" {% if form_data.get('month') == "1" %}selected{% endif %}>January</option>
+          <option value="2" {% if form_data.get('month') == "2" %}selected{% endif %}>February</option>
+          <option value="3" {% if form_data.get('month') == "3" %}selected{% endif %}>March</option>
+          <option value="4" {% if form_data.get('month') == "4" %}selected{% endif %}>April</option>
+          <option value="5" {% if form_data.get('month') == "5" %}selected{% endif %}>May</option>
+          <option value="6" {% if form_data.get('month') == "6" %}selected{% endif %}>June</option>
+          <option value="7" {% if form_data.get('month') == "7" %}selected{% endif %}>July</option>
+          <option value="8" {% if form_data.get('month') == "8" %}selected{% endif %}>August</option>
+          <option value="9" {% if form_data.get('month') == "9" %}selected{% endif %}>September</option>
+          <option value="10" {% if form_data.get('month') == "10" %}selected{% endif %}>October</option>
+          <option value="11" {% if form_data.get('month') == "11" %}selected{% endif %}>November</option>
+          <option value="12" {% if form_data.get('month') == "12" %}selected{% endif %}>December</option>
         </select>
 
-        <!-- Day -->
-        <select 
-          id="day" 
-          name="day" 
-          style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;"
-          required
-        >
+        <select id="day" name="day" required style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;">
           <option value="" disabled selected>Day</option>
+          <!-- The day options will be updated by JavaScript; optionally pre-select if form_data exists -->
         </select>
 
-        <!-- Year -->
-        <select 
-          id="year" 
-          name="year" 
-          style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;"
-          required
-        >
+        <select id="year" name="year" required style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;">
           <option value="" disabled selected>Year</option>
+          <!-- The year options are populated by JavaScript -->
         </select>
       </div>
     </div>
@@ -236,9 +207,9 @@
 </div>
 
 <script>
-// ================
-// Show/Hide Toggles
-// ================
+// =========================
+// 1. Show/Hide Toggles
+// =========================
 function togglePassword(inputId, btn) {
   const inputField = document.getElementById(inputId);
   if (inputField.type === "password") {
@@ -250,13 +221,14 @@ function togglePassword(inputId, btn) {
   }
 }
 
-// 1. Custom Email Validation
+// =========================
+// 2. Custom Email Validation
+// =========================
 const emailInput = document.getElementById('email');
 const emailError = document.getElementById('emailError');
 
 emailInput.addEventListener('input', function() {
   const emailVal = emailInput.value.trim();
-  // Basic check: must contain "@" and "."
   if (emailVal !== "" && (!emailVal.includes('@') || !emailVal.includes('.'))) {
     emailError.style.display = 'block';
     emailError.textContent = "Please enter a valid email (e.g., user@example.com).";
@@ -265,9 +237,12 @@ emailInput.addEventListener('input', function() {
   }
 });
 
-// 2. Username Live Validation Hint
+// =========================
+// 3. Username Live Validation & Availability Check
+// =========================
 const usernameInput = document.getElementById('username');
 const usernameHint = document.getElementById('usernameHint');
+const usernameExists = document.getElementById('usernameExists');
 
 usernameInput.addEventListener('focus', function() {
   usernameHint.style.display = 'block';
@@ -277,13 +252,39 @@ usernameInput.addEventListener('input', function() {
   const username = usernameInput.value;
   const regex = /^[A-Za-z0-9_.]{2,32}$/;
   if (regex.test(username)) {
-    usernameHint.style.color = '#aaffaa'; // Valid: green-ish
+    usernameHint.style.color = '#aaffaa';
   } else {
-    usernameHint.style.color = '#ffaaaa'; // Invalid: red-ish
+    usernameHint.style.color = '#ffaaaa';
+  }
+
+  if (username.length > 1) {
+    fetch("{{ url_for('check_username') }}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ username: username })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.exists) {
+        usernameExists.style.display = 'block';
+        usernameExists.textContent = "This username is already taken.";
+      } else {
+        usernameExists.style.display = 'none';
+      }
+    })
+    .catch(error => {
+      console.error("Error checking username:", error);
+    });
+  } else {
+    usernameExists.style.display = 'none';
   }
 });
 
-// 3. Password Strength Meter
+// =========================
+// 4. Password Strength Meter
+// =========================
 const passwordInput = document.getElementById('password');
 const passwordMeter = document.getElementById('passwordMeter');
 const passwordStrengthText = document.getElementById('passwordStrengthText');
@@ -296,15 +297,12 @@ passwordInput.addEventListener('focus', function() {
 passwordInput.addEventListener('input', function() {
   const pwd = passwordInput.value;
   let strength = 0;
-
   if (pwd.length >= 6)  strength += 20;
   if (pwd.length >= 10) strength += 20;
   if (/[A-Z]/.test(pwd)) strength += 20;
   if (/[0-9]/.test(pwd)) strength += 20;
   if (/[\W_]/.test(pwd)) strength += 20;
-
   passwordMeter.value = strength;
-
   let color;
   if (strength < 40) {
     passwordStrengthText.textContent = "Weak";
@@ -322,7 +320,9 @@ passwordInput.addEventListener('input', function() {
   passwordMeter.style.setProperty('--strength-color', color);
 });
 
-// 4. Real-time Confirm Password Mismatch
+// =========================
+// 5. Real-time Confirm Password Mismatch
+// =========================
 const confirmInput = document.getElementById('confirm');
 const confirmError = document.getElementById('confirmError');
 
@@ -337,7 +337,9 @@ function checkPasswordsMatch() {
 confirmInput.addEventListener('input', checkPasswordsMatch);
 passwordInput.addEventListener('input', checkPasswordsMatch);
 
-// 5. Dynamic Days in the Month
+// =========================
+// 6. Dynamic Days in the Month
+// =========================
 const monthSelect = document.getElementById('month');
 const daySelect = document.getElementById('day');
 const yearSelect = document.getElementById('year');
