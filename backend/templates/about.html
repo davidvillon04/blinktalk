@@ -1,24 +1,38 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <!-- Navigation Bar -->
-<nav style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-  <div style="font-weight: bold; font-size: 1.5rem;">
-    BlinkTalk
-  </div>
-  <div style="display: flex; gap: 1rem;">
-    <a href="{{ url_for('home') }}">Home</a>
-    <a href="{{ url_for('login') }}" style="padding: 0.5rem 1rem; background-color: #0a3a54; border-radius: 4px; text-decoration: none; color: #ffffff;">
-      Login
-    </a>
-    <a href="{{ url_for('register') }}" style="padding: 0.5rem 1rem; background-color: #0a3a54; border-radius: 4px; text-decoration: none; color: #ffffff;">
-      Create Account
-    </a>
-  </div>
+<nav
+   style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem"
+>
+   <div style="font-weight: bold; font-size: 1.5rem">BlinkTalk</div>
+   <div style="display: flex; gap: 1rem">
+      <a href="{{ url_for('home') }}">Home</a>
+      <a
+         href="{{ url_for('login') }}"
+         style="
+            padding: 0.5rem 1rem;
+            background-color: #0a3a54;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #ffffff;
+         "
+      >
+         Login
+      </a>
+      <a
+         href="{{ url_for('register') }}"
+         style="
+            padding: 0.5rem 1rem;
+            background-color: #0a3a54;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #ffffff;
+         "
+      >
+         Create Account
+      </a>
+   </div>
 </nav>
 
 <h1>About BlinkTalk</h1>
-<p>
-  Here you can share details about BlinkTalk’s features, mission, and team.
-</p>
+<p>Here you can share details about BlinkTalk’s features, mission, and team.</p>
 {% endblock %}

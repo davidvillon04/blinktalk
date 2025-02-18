@@ -283,7 +283,7 @@ def user_home():
     # Fetch username from DB:
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+    cursor.execute("SELECT username, profile_pic FROM users WHERE id = %s", (user_id,))
     row = cursor.fetchone()
     cursor.close()
     conn.close()

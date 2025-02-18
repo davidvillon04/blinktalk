@@ -1,32 +1,48 @@
-{% extends "base.html" %}
-
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <!-- Navigation Bar -->
-<nav style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-  <!-- Left side: Brand Name -->
-  <div style="font-weight: bold; font-size: 1.5rem;">
-    BlinkTalk
-  </div>
-  
-  <!-- Right side: Links/Buttons -->
-  <div style="display: flex; gap: 1rem;">
-    <!-- Link to About Us page -->
-    <a href="{{ url_for('about') }}">About Us</a>
-    
-    <!-- "Buttons" styled as links -->
-    <a href="{{ url_for('login') }}" style="padding: 0.5rem 1rem; background-color: #0a3a54; border-radius: 4px; text-decoration: none; color: #ffffff;">
-      Login
-    </a>
-    <a href="{{ url_for('register') }}" style="padding: 0.5rem 1rem; background-color: #0a3a54; border-radius: 4px; text-decoration: none; color: #ffffff;">
-      Create Account
-    </a>
-  </div>
+<nav
+   style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem"
+>
+   <!-- Left side: Brand Name -->
+   <div style="font-weight: bold; font-size: 1.5rem">BlinkTalk</div>
+
+   <!-- Right side: Links/Buttons -->
+   <div style="display: flex; gap: 1rem">
+      <!-- Link to About Us page -->
+      <a href="{{ url_for('about') }}">About Us</a>
+
+      <!-- "Buttons" styled as links -->
+      <a
+         href="{{ url_for('login') }}"
+         style="
+            padding: 0.5rem 1rem;
+            background-color: #0a3a54;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #ffffff;
+         "
+      >
+         Login
+      </a>
+      <a
+         href="{{ url_for('register') }}"
+         style="
+            padding: 0.5rem 1rem;
+            background-color: #0a3a54;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #ffffff;
+         "
+      >
+         Create Account
+      </a>
+   </div>
 </nav>
 
 <!-- Main Content -->
 <h1>Welcome to BlinkTalk!</h1>
 <p>
-  BlinkTalk is your next-generation chat platform.  
-  Stay tuned for more features and exciting updates!
+   BlinkTalk is your next-generation chat platform. Stay tuned for more features and exciting
+   updates!
 </p>
 {% endblock %}
