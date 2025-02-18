@@ -18,10 +18,9 @@ function openAddFriend() {
               placeholder="Enter a username..."
               oninput="onFriendSearchInput()"
             />
+            <button class="add-friend-button" onclick="sendFriendRequest()">Send Request</button>
             <div id="autocompleteDropdown" class="autocomplete-dropdown" style="display: none;"></div>
           </div>
-  
-          <button class="add-friend-button" onclick="sendFriendRequest()">Send Friend Request</button>
         </div>
       </div>
     `;
@@ -39,7 +38,6 @@ function onFriendSearchInput() {
    }
 
    // Simulate an AJAX call to fetch matching users. For now, we'll just do a placeholder.
-   // In production, you'd do something like fetch("/search_users?query=" + inputVal).
    const matchingUsers = simulateUserSearch(inputVal);
 
    if (matchingUsers.length === 0) {
@@ -63,6 +61,7 @@ function simulateUserSearch(query) {
    // return fetch(`/search_users?query=${encodeURIComponent(query)}`)
    //   .then(resp => resp.json())
    //   .then(data => data.slice(0, 50));
+
    // For now, let's just have a placeholder array:
    const allUsers = [
       "FlamerEatsFeet",

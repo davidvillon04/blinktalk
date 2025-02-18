@@ -11,6 +11,7 @@
   }
 
   .container {
+    /* Override the .container from base.html so we fill the screen. */
     max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -37,11 +38,13 @@
     overflow-y: auto;
   }
 
+  /* "Friends" header with plus icon */
   .friends-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     margin-bottom: 1rem;
-    color: #bbb;
+    color: #ffffff;
   }
 
   .friends-header h2 {
@@ -49,16 +52,17 @@
     margin: 0;
   }
 
-  .friends-header .fa-plus {
-    margin-right: 0.5rem;
-    cursor: pointer;
-    font-size: 1rem;
-    color: #bbb;
-    transition: color 0.2s;
+  .friends-header i.fa-solid.fa-plus {
+  cursor: pointer;
+  font-size: 1rem;
+  color: #bbb;
+  transition: color 0.2s, transform 0.2s;
+  margin-left: 1rem; /* adds spacing between the text and icon */
   }
 
-  .friends-header .fa-plus:hover {
+  .friends-header i.fa-solid.fa-plus:hover {
     color: #fff;
+    transform: scale(1.1); /* subtle hover effect */
   }
 
   .friend-list {
@@ -217,15 +221,17 @@
   }
 
   .add-friend-input {
+    display: flex;
+    width: 100%;
+    gap: 0.5rem;
     position: relative;
-    margin-bottom: 1rem;
   }
 
   .add-friend-input input {
-    width: 100%;
+    flex: 1;
     padding: 0.5rem;
     border-radius: 4px;
-    border: none;
+    border: 1px solid #ccc;
   }
 
   .autocomplete-dropdown {
@@ -250,26 +256,29 @@
   }
 
   .add-friend-button {
-    background-color: #5865f2;
+    background-color: #f47b20; /* unique color, e.g., a vibrant orange */
     color: #fff;
     border: none;
-    padding: 0.7rem 1.2rem;
+    padding: 0.5rem 1rem;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9rem;
+    transition: background-color 0.2s, transform 0.2s;
   }
 
   .add-friend-button:hover {
-    background-color: #4752c4;
+    background-color: #d66a18;
+    transform: scale(1.05);
   }
 </style>
 
 <div class="app-container">
   <!-- Left Column: Friends List + User Profile at bottom -->
   <div class="friends-column">
+    <!-- Friends title with plus icon -->
     <div class="friends-header">
-      <i class="fa-solid fa-plus" onclick="openAddFriend()"></i>
       <h2>Friends</h2>
+      <i class="fa-solid fa-plus" title="Add Friend" onclick="openAddFriend()"></i>
     </div>
 
     <ul class="friend-list">
