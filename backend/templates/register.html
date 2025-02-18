@@ -27,11 +27,9 @@
 
   <!-- Password Input with Toggle and Strength Meter -->
   <label for="password">Password:</label>
-  <div style="position: relative;">
+  <div style="display: inline-flex; align-items: center; gap: 0.5rem;">
     <input type="password" id="password" name="password" required>
-    <button type="button"
-            style="position: absolute; right: 0.5rem; top: 0.5rem; background: none; border: none; cursor: pointer;"
-            onclick="togglePassword('password', this)">Show</button>
+    <button type="button" onclick="togglePassword('password', this)">Show</button>
   </div>
   <!-- Password Strength Meter -->
   <div id="passwordStrengthContainer" style="margin-top: 5px; display: none;">
@@ -42,14 +40,12 @@
 
   <!-- Confirm Password Input with Toggle -->
   <label for="confirm">Confirm Password:</label>
-  <div style="position: relative;">
+  <div style="display: inline-flex; align-items: center; gap: 0.5rem;">
     <input type="password" id="confirm" name="confirm" required>
-    <button type="button"
-            style="position: absolute; right: 0.5rem; top: 0.5rem; background: none; border: none; cursor: pointer;"
-            onclick="togglePassword('confirm', this)">Show</button>
+    <button type="button" onclick="togglePassword('confirm', this)">Show</button>
   </div>
-
   <br>
+
   <input type="submit" value="Create Account">
 </form>
 
