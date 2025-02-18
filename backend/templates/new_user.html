@@ -1,17 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="
-  max-width: 400px;
-  margin: 4rem auto;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 2rem;
-  border-radius: 8px;
-  text-align: center;
-">
+<div style="max-width: 400px; margin: 4rem auto; background: rgba(0, 0, 0, 0.6); padding: 2rem; border-radius: 8px; text-align: center;">
   <h2>Set Your Profile Picture</h2>
   <p>You can choose a profile picture now or skip and set one up later.</p>
-  
+
+  <!-- Display flash messages -->
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash-messages" style="color: #ff4444; margin-bottom: 1rem;">
+        {% for message in messages %}
+          <p>{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
   <!-- Profile Picture Form -->
   <form method="POST" enctype="multipart/form-data">
     <div style="margin-bottom: 1rem;">

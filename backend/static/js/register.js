@@ -35,11 +35,11 @@ const usernameHint = document.getElementById("usernameHint");
 const usernameExists = document.getElementById("usernameExists");
 
 if (usernameInput) {
-   // On focus, show hint only if current value is invalid (and not empty)
    usernameInput.addEventListener("focus", function () {
       const username = usernameInput.value;
       const regex = /^[A-Za-z0-9_.]{2,32}$/;
-      if (username.trim() !== "" && !regex.test(username)) {
+      // Only show the hint if there is text and it's invalid.
+      if (username !== "" && !regex.test(username)) {
          usernameHint.style.display = "block";
       } else {
          usernameHint.style.display = "none";
@@ -50,7 +50,7 @@ if (usernameInput) {
       const username = usernameInput.value;
       const regex = /^[A-Za-z0-9_.]{2,32}$/;
 
-      // If invalid, show hint; if valid, hide it.
+      // Show the hint if invalid, hide it if valid
       if (!regex.test(username)) {
          usernameHint.style.display = "block";
          usernameHint.style.color = "#ffaaaa";
@@ -58,10 +58,8 @@ if (usernameInput) {
          usernameHint.style.display = "none";
       }
 
-      // Clear any existing debounce timer
       clearTimeout(usernameTimer);
       if (username.length > 1) {
-         // Wait 2000ms (2 seconds) after user stops typing before checking availability.
          usernameTimer = setTimeout(() => {
             fetch("/check_username", {
                method: "POST",
@@ -80,7 +78,7 @@ if (usernameInput) {
                .catch((error) => {
                   console.error("Error checking username:", error);
                });
-         }, 500);
+         }, 500); // 2-second debounce; change here if needed.
       } else {
          usernameExists.style.display = "none";
       }

@@ -50,6 +50,7 @@ def about():
 def register():
     form_data = {}  # Dictionary to pass form data back to the template
     if request.method == "POST":
+        # Get form data and strip whitespace for username
         form_data = request.form.to_dict()
         username = form_data.get("username", "")
         password = form_data.get("password", "")
@@ -59,28 +60,34 @@ def register():
         day = form_data.get("day", "")
         year = form_data.get("year", "")
 
+        # Check that all required fields are filled out
         if not (username and password and confirm and email and month and day and year):
             form_data["error_general"] = "Please fill out all required fields!"
             return render_template("register.html", form_data=form_data)
 
+        # Check if passwords match
         if password != confirm:
             form_data["error_password_mismatch"] = "Passwords do not match."
             return render_template("register.html", form_data=form_data)
 
+        # Convert username to lowercase for case-insensitive check
         lowercase_username = username.lower()
 
+        # Convert DOB into a date object
         try:
             dob = date(int(year), int(month), int(day))
         except ValueError:
             form_data["error_dob"] = "Invalid date of birth!"
             return render_template("register.html", form_data=form_data)
 
+        # Connect to MySQL
         conn = get_db_connection()
         if conn is None:
             form_data["error_general"] = "Database connection error!"
             return render_template("register.html", form_data=form_data)
         cursor = conn.cursor()
 
+        # Check if the username already exists (case-insensitive)
         check_user_query = "SELECT id FROM users WHERE LOWER(username) = %s"
         cursor.execute(check_user_query, (lowercase_username,))
         if cursor.fetchone():
@@ -89,6 +96,7 @@ def register():
             conn.close()
             return render_template("register.html", form_data=form_data)
 
+        # Check if the email already exists (case-insensitive)
         check_email_query = "SELECT id FROM users WHERE LOWER(email) = LOWER(%s)"
         cursor.execute(check_email_query, (email.lower(),))
         if cursor.fetchone():
@@ -97,19 +105,19 @@ def register():
             conn.close()
             return render_template("register.html", form_data=form_data)
 
+        # Insert new user into the table (Note: For production, hash the password!)
         insert_query = (
             "INSERT INTO users (username, password, email, dob) VALUES (%s, %s, %s, %s)"
         )
         cursor.execute(insert_query, (lowercase_username, password, email, dob))
         conn.commit()
+
         cursor.close()
         conn.close()
 
-        flash(
-            "Account created successfully! Please set your profile picture, or skip to do it later."
-        )
         return redirect(url_for("new_user"))
 
+    # For GET requests or validation errors, re-render the form with current form_data
     return render_template("register.html", form_data=form_data)
 
 
@@ -160,21 +168,21 @@ def new_user():
     if request.method == "POST":
         # If the user clicks "Skip", redirect to user_home
         if "skip" in request.form:
-            flash("Profile picture setup skipped.")
             return redirect(url_for("user_home"))
 
         # Process the uploaded file
         if "profile_pic" not in request.files:
             flash("No file part in the request!")
             return redirect(request.url)
+
         file = request.files["profile_pic"]
         if file.filename == "":
-            flash("No file selected!")
+            flash("Please upload a file before uploading!")
             return redirect(request.url)
+
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-            flash("Profile picture uploaded successfully!")
             return redirect(url_for("user_home"))
         else:
             flash("Invalid file type! Allowed types: png, jpg, jpeg, gif.")
@@ -184,7 +192,6 @@ def new_user():
 
 @app.route("/user_home")
 def user_home():
-    # A simple placeholder for the user's home page.
     return render_template("user_home.html")
 
 
