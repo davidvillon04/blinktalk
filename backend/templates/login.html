@@ -1,7 +1,7 @@
 {% extends "base.html" %}
+{% set form_data = form_data|default({}) %}
 
 {% block content %}
-<!-- Centered "card" container -->
 <div style="
   max-width: 400px; 
   margin: 4rem auto; 
@@ -11,6 +11,13 @@
 ">
   <h2 style="margin-bottom: 0.5rem;">Welcome back!</h2>
   <p style="margin-bottom: 1.5rem;">We're so excited to see you again!</p>
+
+  <!-- Inline login error (if any) -->
+  {% if form_data.get("error_login") %}
+    <div style="color: #ff4444; margin-bottom: 1rem; font-size: 0.9em;">
+      {{ form_data["error_login"] }}
+    </div>
+  {% endif %}
 
   <!-- Display flash messages (if any) -->
   {% with messages = get_flashed_messages() %}
@@ -35,6 +42,7 @@
         required 
         placeholder="Email or username"
         style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;"
+        value="{{ form_data.get('email_or_username', '') }}"
       >
     </div>
 
@@ -80,6 +88,6 @@
   </p>
 </div>
 
-<!-- Reference the external JavaScript file for login functionality -->
+<!-- Optionally reference login.js for the togglePassword function -->
 <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 {% endblock %}

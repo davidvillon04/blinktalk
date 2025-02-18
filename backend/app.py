@@ -1,4 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    jsonify,
+    session,
+)
 import mysql.connector
 from mysql.connector import errorcode
 from datetime import date
@@ -123,9 +132,62 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    form_data = {}
     if request.method == "POST":
-        flash("Login functionality will be implemented soon.")
-        return redirect(url_for("login"))
+        # 1. Get form inputs
+        form_data = request.form.to_dict()
+        email_or_username = form_data.get("email_or_username", "")
+        password = form_data.get("password", "")
+
+        # 2. Check if fields are empty
+        if not email_or_username or not password:
+            # We'll store the error in form_data and re-render login.html
+            form_data["error_login"] = "Please fill out all fields."
+            return render_template("login.html", form_data=form_data)
+
+        # 3. Connect to the database
+        conn = get_db_connection()
+        if conn is None:
+            form_data["error_login"] = "Database connection error!"
+            return render_template("login.html", form_data=form_data)
+
+        cursor = conn.cursor(dictionary=True)  # dictionary=True => results as dict
+
+        # 4. Query for a user whose username or email matches
+        check_query = """
+            SELECT id, username, password
+            FROM users
+            WHERE LOWER(username) = LOWER(%s) OR LOWER(email) = LOWER(%s)
+        """
+        cursor.execute(check_query, (email_or_username, email_or_username))
+        user_row = cursor.fetchone()
+
+        if not user_row:
+            # No user found
+            form_data["error_login"] = "Invalid username/email or password."
+            cursor.close()
+            conn.close()
+            return render_template("login.html", form_data=form_data)
+
+        # 5. Compare the plain-text password
+        # (For production, you'd store a hashed password and use a library like bcrypt to check.)
+        if password != user_row["password"]:
+            form_data["error_login"] = "Invalid username/email or password."
+            cursor.close()
+            conn.close()
+            return render_template("login.html", form_data=form_data)
+
+        # 6. If valid, store user info in session
+        session["user_id"] = user_row["id"]
+        # (Optionally store session["username"] = user_row["username"] if you want to greet by name)
+
+        cursor.close()
+        conn.close()
+
+        # 7. Redirect to user_home
+        return redirect(url_for("user_home"))
+
+    # GET request or re-render
     return render_template("login.html")
 
 
@@ -192,6 +254,10 @@ def new_user():
 
 @app.route("/user_home")
 def user_home():
+    if "user_id" not in session:
+        flash("Please log in first.")
+        return redirect(url_for("login"))
+    # Optionally, fetch user info from DB or session to greet them by name
     return render_template("user_home.html")
 
 
