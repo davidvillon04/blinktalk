@@ -15,39 +15,9 @@
 
    <!-- Right side: Links/Buttons -->
    <div style="display: flex; gap: 1rem">
-      <a
-         href="{{ url_for('about') }}"
-         style="
-            padding: 0.5rem 1rem;
-            background-color: rgba(10, 58, 84, 0.7);
-            border-radius: 4px;
-            text-decoration: none;
-            color: #ffffff;
-         "
-         >About Us</a
-      >
-      <a
-         href="{{ url_for('login') }}"
-         style="
-            padding: 0.5rem 1rem;
-            background-color: rgba(10, 58, 84, 0.7);
-            border-radius: 4px;
-            text-decoration: none;
-            color: #ffffff;
-         "
-         >Login</a
-      >
-      <a
-         href="{{ url_for('register') }}"
-         style="
-            padding: 0.5rem 1rem;
-            background-color: rgba(10, 58, 84, 0.7);
-            border-radius: 4px;
-            text-decoration: none;
-            color: #ffffff;
-         "
-         >Create Account</a
-      >
+      <a href="{{ url_for('about') }}" class="nav-button">About Us</a>
+      <a href="{{ url_for('login') }}" class="nav-button">Login</a>
+      <a href="{{ url_for('register') }}" class="nav-button">Create Account</a>
    </div>
 </nav>
 
@@ -59,4 +29,21 @@
       updates!
    </p>
 </div>
+
+<style>
+   .nav-button {
+      padding: 0.5rem 1rem;
+      background-color: rgba(10, 58, 84, 0.2);
+      border-radius: 4px;
+      text-decoration: none;
+      color: #ffffff;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+   }
+
+   .nav-button:hover {
+      background-color: rgba(10, 58, 84, 0.575);
+      transform: scale(1.05);
+   }
+</style>
+
 {% endblock %}
