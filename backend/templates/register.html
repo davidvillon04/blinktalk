@@ -1,82 +1,72 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="max-width: 400px; margin: 4rem auto; background: rgba(0, 0, 0, 0.6); padding: 2rem; border-radius: 8px;">
-  <h2 style="margin-bottom: 1rem;">Create an account</h2>
+<div class="register-container">
+  <h2>Create an account</h2>
 
-  <!-- General inline error (if any) -->
+  <!-- General error message, if any -->
   {% if form_data.get("error_general") %}
-    <div style="color: #ff4444; margin-bottom: 1rem; font-size: 0.9em;">
+    <div class="error-general">
       {{ form_data["error_general"] }}
     </div>
   {% endif %}
 
-  <form method="POST" id="registerForm" style="display: flex; flex-direction: column; gap: 1rem;" novalidate>
+  <form method="POST" id="registerForm" class="register-form" novalidate>
     <!-- Email Field -->
-    <div>
-      <label for="email" style="display: block; margin-bottom: 0.3rem;">EMAIL <span style="color: #ffaaaa;">*</span></label>
-      <input type="text" id="email" name="email" placeholder="Email" value="{{ form_data.get('email', '') }}"
-             style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;" required>
+    <div class="form-group">
+      <label for="email">EMAIL <span class="required">*</span></label>
+      <input type="text" id="email" name="email" placeholder="Email" value="{{ form_data.get('email', '') }}" required>
       {% if form_data.get("error_email_taken") %}
-        <div style="color: #ff4444; font-size: 0.9em; margin-top: 4px;">{{ form_data["error_email_taken"] }}</div>
+        <div class="error-message">{{ form_data["error_email_taken"] }}</div>
       {% endif %}
-      <div id="emailError" style="color: #ffaaaa; font-size: 0.9em; margin-top: 4px; display: none;"></div>
-      <div id="emailExists" style="color: #ff4444; font-size: 0.9em; margin-top: 4px; display: none;"></div>
+      <div id="emailError" class="error-inline" style="display: none;"></div>
+      <div id="emailExists" class="error-inline" style="display: none;"></div>
     </div>
 
     <!-- Username Field -->
-    <div>
-      <label for="username" style="display: block; margin-bottom: 0.3rem;">USERNAME <span style="color: #ffaaaa;">*</span></label>
-      <input type="text" id="username" name="username" placeholder="Username" value="{{ form_data.get('username', '') }}"
-             style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;" required>
+    <div class="form-group">
+      <label for="username">USERNAME <span class="required">*</span></label>
+      <input type="text" id="username" name="username" placeholder="Username" value="{{ form_data.get('username', '') }}" required>
       {% if form_data.get("error_username_taken") %}
-        <div style="color: #ff4444; font-size: 0.9em; margin-top: 4px;">{{ form_data["error_username_taken"] }}</div>
+        <div class="error-message">{{ form_data["error_username_taken"] }}</div>
       {% endif %}
-      <div id="usernameHint" style="font-size: 0.9em; margin-top: 4px; color: #ffaaaa; display: none;">
+      <div id="usernameHint" class="hint" style="display: none;">
         Username must be 2-32 characters long and can only contain letters, numbers, underscores (_) and periods (.).
       </div>
-      <div id="usernameExists" style="font-size: 0.9em; color: #ff4444; margin-top: 4px; display: none;"></div>
+      <div id="usernameExists" class="error-inline" style="display: none;"></div>
     </div>
 
     <!-- Password Field -->
-    <div>
-      <label for="password" style="display: block; margin-bottom: 0.3rem;">PASSWORD <span style="color: #ffaaaa;">*</span></label>
-      <div style="position: relative;">
-        <input type="password" id="password" name="password" placeholder="Password"
-               style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; padding-right: 3rem;" required>
-        <button type="button" onclick="togglePassword('password', this)"
-                style="position: absolute; right: 0.5rem; top: 0.4rem; background: none; border: none; cursor: pointer; color: #000000;">
-          Show
-        </button>
+    <div class="form-group">
+      <label for="password">PASSWORD <span class="required">*</span></label>
+      <div class="password-container">
+        <input type="password" id="password" name="password" placeholder="Password" required>
+        <button type="button" onclick="togglePassword('password', this)">Show</button>
       </div>
-      <div id="passwordStrengthContainer" style="margin-top: 5px; display: none;">
-        <meter max="100" id="passwordMeter" value="0" style="width: 100%;"></meter>
-        <div id="passwordStrengthText" style="font-size: 0.9em; margin-top: 3px;"></div>
+      <div id="passwordStrengthContainer" class="password-strength" style="display: none;">
+        <meter max="100" id="passwordMeter" value="0"></meter>
+        <div id="passwordStrengthText" class="strength-text"></div>
       </div>
     </div>
 
     <!-- Confirm Password Field -->
-    <div>
-      <label for="confirm" style="display: block; margin-bottom: 0.3rem;">CONFIRM PASSWORD <span style="color: #ffaaaa;">*</span></label>
-      <div style="position: relative;">
-        <input type="password" id="confirm" name="confirm" placeholder="Confirm Password"
-               style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; padding-right: 3rem;" required>
-        <button type="button" onclick="togglePassword('confirm', this)"
-                style="position: absolute; right: 0.5rem; top: 0.4rem; background: none; border: none; cursor: pointer; color: #000000;">
-          Show
-        </button>
+    <div class="form-group">
+      <label for="confirm">CONFIRM PASSWORD <span class="required">*</span></label>
+      <div class="password-container">
+        <input type="password" id="confirm" name="confirm" placeholder="Confirm Password" required>
+        <button type="button" onclick="togglePassword('confirm', this)">Show</button>
       </div>
       {% if form_data.get("error_password_mismatch") %}
-        <div style="color: #ff4444; font-size: 0.9em; margin-top: 4px;">{{ form_data["error_password_mismatch"] }}</div>
+        <div class="error-message">{{ form_data["error_password_mismatch"] }}</div>
       {% endif %}
-      <div id="confirmError" style="color: #ff4444; font-size: 0.9em; margin-top: 4px; display: none;"></div>
+      <div id="confirmError" class="error-inline" style="display: none;"></div>
     </div>
 
     <!-- Date of Birth Fields -->
-    <div>
-      <label style="display: block; margin-bottom: 0.3rem;">DATE OF BIRTH <span style="color: #ffaaaa;">*</span></label>
-      <div style="display: flex; gap: 0.5rem;">
-        <select id="month" name="month" required style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;">
+    <div class="form-group">
+      <label>DATE OF BIRTH <span class="required">*</span></label>
+      <div class="dob-group">
+        <select id="month" name="month" required>
           <option value="" disabled selected>Month</option>
           <option value="1" {% if form_data.get('month') == "1" %}selected{% endif %}>January</option>
           <option value="2" {% if form_data.get('month') == "2" %}selected{% endif %}>February</option>
@@ -91,38 +81,36 @@
           <option value="11" {% if form_data.get('month') == "11" %}selected{% endif %}>November</option>
           <option value="12" {% if form_data.get('month') == "12" %}selected{% endif %}>December</option>
         </select>
-
-        <select id="day" name="day" required style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;">
+        <select id="day" name="day" required>
           <option value="" disabled selected>Day</option>
           <!-- Day options will be populated by JavaScript -->
         </select>
-
-        <select id="year" name="year" required style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;">
+        <select id="year" name="year" required>
           <option value="" disabled selected>Year</option>
           <!-- Year options will be populated by JavaScript -->
         </select>
       </div>
       {% if form_data.get("error_dob") %}
-        <div style="color: #ff4444; font-size: 0.9em; margin-top: 4px;">
+        <div class="error-message">
           {{ form_data["error_dob"] }}
         </div>
       {% endif %}
     </div>
 
     <!-- Submit Button -->
-    <input type="submit" value="Continue" style="background-color: #0a3a54; color: #ffffff; border: none; padding: 0.7rem; border-radius: 4px; cursor: pointer; font-size: 1rem;">
+    <input type="submit" value="Continue" class="submit-button">
   </form>
 
-  <p style="margin-top: 1rem; font-size: 0.85em;">
+  <p class="register-note">
     By registering, you agree to BlinkTalk's 
-    <a href="#" style="color: #cceeff; text-decoration: underline;">Terms of Service</a> 
+    <a href="#">Terms of Service</a> 
     and 
-    <a href="#" style="color: #cceeff; text-decoration: underline;">Privacy Policy</a>.
+    <a href="#">Privacy Policy</a>.
   </p>
 
-  <p style="margin-top: 1rem; font-size: 0.9em;">
+  <p class="register-prompt">
     Already have an account?
-    <a href="{{ url_for('login') }}" style="color: #cceeff; text-decoration: underline;">Login</a>
+    <a href="{{ url_for('login') }}">Login</a>
   </p>
 </div>
 
