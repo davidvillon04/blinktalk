@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 import mysql.connector
 from mysql.connector import errorcode
 from datetime import date
+import os
+from flask import send_from_directory
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for flash messages
@@ -128,3 +130,46 @@ def check_username():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+# Configure an upload folder (make sure this folder exists)
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "profile_pics")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route("/set_profile_pic", methods=["GET", "POST"])
+def set_profile_pic():
+    if request.method == "POST":
+        # Check if the user clicked "Skip"
+        if "skip" in request.form:
+            # Redirect or set default profile picture for the user
+            flash("Profile picture setup skipped.")
+            return redirect(url_for("index"))  # or wherever you want to go next
+
+        # Otherwise, process the uploaded file
+        if "profile_pic" not in request.files:
+            flash("No file part in the request!")
+            return redirect(request.url)
+        file = request.files["profile_pic"]
+        if file.filename == "":
+            flash("No file selected!")
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            # Secure the filename here if needed (e.g., using Werkzeug's secure_filename)
+            from werkzeug.utils import secure_filename
+
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+
+            # You'd typically update the user’s record in your database here.
+            flash("Profile picture uploaded successfully!")
+            return redirect(url_for("index"))
+        else:
+            flash("Invalid file type! Allowed types: png, jpg, jpeg, gif.")
+            return redirect(request.url)
+
+    return render_template("new_user.html")
