@@ -10,20 +10,13 @@
     height: 100%;
   }
 
-  .container {
-    /* Override the .container from base.html so we fill the screen. */
-    max-width: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-  }
-
+  /* The main container for the entire user_home layout */
   .app-container {
     display: flex;
     width: 100%;
     height: 100vh;
-    background-color: #2f3136; /* Discord-like background */
+    /* No solid background here => let the gradient from base.html show through */
+    background: none;
     color: #fff;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   }
@@ -33,7 +26,8 @@
     display: flex;
     flex-direction: column;
     width: 250px;
-    background-color: #202225;
+    /* Use a semi-transparent dark overlay */
+    background-color: rgba(32, 34, 37, 0.8);
     padding: 1rem;
     overflow-y: auto;
   }
@@ -53,23 +47,22 @@
   }
 
   .friends-header i.fa-solid.fa-plus {
-  cursor: pointer;
-  font-size: 1rem;
-  color: #bbb;
-  transition: color 0.2s, transform 0.2s;
-  margin-left: 1rem; /* adds spacing between the text and icon */
+    cursor: pointer;
+    font-size: 1rem;
+    color: #bbb;
+    transition: color 0.2s, transform 0.2s;
+    margin-left: 1rem; /* adds spacing between the text and icon */
   }
-
   .friends-header i.fa-solid.fa-plus:hover {
     color: #fff;
-    transform: scale(1.1); /* subtle hover effect */
+    transform: scale(1.1);
   }
 
   .friend-list {
     list-style: none;
     padding-left: 0;
     margin: 0;
-    flex: 1; /* expand vertically */
+    flex: 1;
   }
 
   .friend-list li {
@@ -77,14 +70,12 @@
     align-items: center;
     padding: 0.5rem;
     margin-bottom: 0.3rem;
-    background-color: #2f3136;
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.2s;
   }
-
   .friend-list li:hover {
-    background-color: #3a3d41;
+    background-color: rgba(97, 67, 61, 0.9);
   }
 
   .friend-avatar {
@@ -101,7 +92,7 @@
     align-items: center;
     margin-top: auto;
     padding: 0.5rem;
-    background-color: #2f3136;
+    background-color: rgba(105, 73, 68, 0.8);
     border-radius: 4px;
   }
 
@@ -112,29 +103,24 @@
     object-fit: cover;
     margin-right: 0.5rem;
   }
-
   .user-info {
     display: flex;
     flex-direction: column;
-    flex: 1; /* push icons to the right */
+    flex: 1;
   }
-
   .user-name {
     font-size: 1rem;
     font-weight: 600;
   }
-
   .user-icons {
     display: flex;
     gap: 0.5rem;
   }
-
   .user-icons i {
     cursor: pointer;
     font-size: 1rem;
     color: #bbb;
   }
-
   .user-icons i:hover {
     color: #fff;
   }
@@ -144,26 +130,25 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: #36393f;
+    /* Another semi-transparent overlay for the center area */
+    background-color: rgba(54, 57, 63, 0.534);
     padding: 1rem;
   }
 
   .chat-header {
     margin-bottom: 1rem;
   }
-
   .chat-header h2 {
     font-size: 1.2rem;
   }
 
   .chat-content {
     flex: 1;
-    background-color: #40444b;
+    background-color: rgba(87, 30, 30, 0.384);
     border-radius: 4px;
     padding: 1rem;
     overflow-y: auto;
   }
-
   .chat-content p {
     margin-bottom: 1rem;
   }
@@ -171,7 +156,6 @@
   .chat-footer {
     margin-top: 1rem;
   }
-
   .chat-footer input {
     width: 100%;
     padding: 0.5rem;
@@ -181,16 +165,15 @@
 
   /* Right column: activity feed */
   .activity-column {
-    width: 300px;
-    background-color: #2f3136;
+    width: 500px;
+    background-color: rgba(32, 34, 37, 0.8);
     padding: 1rem;
     overflow-y: auto;
   }
-
   .activity-column h2 {
     font-size: 1.1rem;
     margin-bottom: 1rem;
-    color: #bbb;
+    color: #ffffff;
   }
 
   /* Add Friend UI styling */
@@ -199,34 +182,30 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%; /* fill the chat-content area */
+    height: 100%;
   }
 
   .add-friend-box {
-    background-color: #2f3136;
+    background-color: rgba(47, 49, 54, 0.8);
     padding: 2rem;
     border-radius: 8px;
     max-width: 400px;
     width: 100%;
     text-align: center;
   }
-
   .add-friend-box h2 {
     margin-bottom: 1rem;
   }
-
   .add-friend-box p {
     margin-bottom: 2rem;
     color: #aaa;
   }
-
   .add-friend-input {
     display: flex;
     width: 100%;
     gap: 0.5rem;
     position: relative;
   }
-
   .add-friend-input input {
     flex: 1;
     padding: 0.5rem;
@@ -236,27 +215,25 @@
 
   .autocomplete-dropdown {
     position: absolute;
-    top: 38px; /* just below the input */
+    top: 38px;
     left: 0;
     right: 0;
-    background-color: #2f3136;
+    background-color: rgba(47, 49, 54, 0.9);
     border-radius: 4px;
     max-height: 200px;
     overflow-y: auto;
     z-index: 10;
   }
-
   .autocomplete-item {
     padding: 0.5rem;
     cursor: pointer;
   }
-
   .autocomplete-item:hover {
-    background-color: #3a3d41;
+    background-color: rgba(58, 61, 65, 0.9);
   }
 
   .add-friend-button {
-    background-color: #f47b20; /* unique color, e.g., a vibrant orange */
+    background-color: #f47b20; 
     color: #fff;
     border: none;
     padding: 0.5rem 1rem;
@@ -265,7 +242,6 @@
     font-size: 0.9rem;
     transition: background-color 0.2s, transform 0.2s;
   }
-
   .add-friend-button:hover {
     background-color: #d66a18;
     transform: scale(1.05);
@@ -280,7 +256,6 @@
       <h2>Friends</h2>
       <i class="fa-solid fa-plus" title="Add Friend" onclick="openAddFriend()"></i>
     </div>
-
     <ul class="friend-list">
       {% set friends = [
         {'name': 'Friend 1', 'profile_pic': '/static/profile_pics/friend1.png'},
@@ -310,7 +285,6 @@
         <div class="user-name">{{ username or "User" }}</div>
       </div>
       <div class="user-icons">
-        <!-- Example icons: microphone, headphones, cog -->
         <i class="fa fa-microphone"></i>
         <i class="fa fa-headphones"></i>
         <i class="fa fa-cog"></i>
@@ -339,6 +313,6 @@
   </div>
 </div>
 
-<!-- Reference the external JavaScript file for user_home functionality -->
+<!-- user_home.js for Add Friend + chat switching logic -->
 <script src="{{ url_for('static', filename='js/user_home.js') }}"></script>
 {% endblock %}
