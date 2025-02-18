@@ -87,20 +87,21 @@ def register():
             return render_template("register.html", form_data=form_data)
         cursor = conn.cursor()
 
-        # Check if the username already exists (case-insensitive)
+        # Instead of returning early, check both username and email errors
+        errors = {}
+
         check_user_query = "SELECT id FROM users WHERE LOWER(username) = %s"
         cursor.execute(check_user_query, (lowercase_username,))
         if cursor.fetchone():
-            form_data["error_username_taken"] = "Username is already taken."
-            cursor.close()
-            conn.close()
-            return render_template("register.html", form_data=form_data)
+            errors["error_username_taken"] = "Username is already taken."
 
-        # Check if the email already exists (case-insensitive)
         check_email_query = "SELECT id FROM users WHERE LOWER(email) = LOWER(%s)"
         cursor.execute(check_email_query, (email.lower(),))
         if cursor.fetchone():
-            form_data["error_email_taken"] = "Email is already registered."
+            errors["error_email_taken"] = "Email is already registered."
+
+        if errors:
+            form_data.update(errors)
             cursor.close()
             conn.close()
             return render_template("register.html", form_data=form_data)
