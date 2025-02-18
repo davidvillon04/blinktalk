@@ -22,15 +22,15 @@
     display: flex;
     width: 100%;
     height: 100vh;
-    background-color: #2f3136;
+    background-color: #2f3136; /* Discord-like background */
     color: #fff;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   }
 
   /* Left column: friends list + user profile at bottom */
   .friends-column {
-    display: flex;            /* important: become a flex container */
-    flex-direction: column;   /* stack children vertically */
+    display: flex;
+    flex-direction: column; /* stack children vertically */
     width: 250px;
     background-color: #202225;
     padding: 1rem;
@@ -47,10 +47,12 @@
     list-style: none;
     padding-left: 0;
     margin: 0;
-    flex: 1; /* take remaining vertical space */
+    flex: 1; /* expand vertically */
   }
 
   .friend-list li {
+    display: flex;       /* place avatar + name horizontally */
+    align-items: center;
     padding: 0.5rem;
     margin-bottom: 0.3rem;
     background-color: #2f3136;
@@ -63,11 +65,19 @@
     background-color: #3a3d41;
   }
 
-  /* User Profile at bottom */
+  .friend-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 0.5rem;
+  }
+
+  /* Bottom user profile box */
   .user-profile {
     display: flex;
     align-items: center;
-    margin-top: auto;       /* pushes this box to the bottom of the column */
+    margin-top: auto; /* push this box to the bottom */
     padding: 0.5rem;
     background-color: #2f3136;
     border-radius: 4px;
@@ -92,11 +102,6 @@
     font-weight: 600;
   }
 
-  .user-status {
-    font-size: 0.8rem;
-    color: #bbb;
-  }
-
   .user-icons {
     display: flex;
     gap: 0.5rem;
@@ -112,7 +117,7 @@
     color: #fff;
   }
 
-  /* Center column: chat area */
+  /* Center column: main chat area */
   .chat-column {
     flex: 1;
     display: flex;
@@ -172,15 +177,25 @@
   <div class="friends-column">
     <h2>Friends</h2>
     <ul class="friend-list">
-      <!-- Hard-coded friends for now -->
-      <li onclick="openChat('Friend 1')">Friend 1</li>
-      <li onclick="openChat('Friend 2')">Friend 2</li>
-      <li onclick="openChat('Friend 3')">Friend 3</li>
+      {% set friends = [
+        {'name': 'Friend 1', 'profile_pic': '/static/profile_pics/friend1.png'},
+        {'name': 'Friend 2', 'profile_pic': None},
+        {'name': 'Friend 3', 'profile_pic': '/static/profile_pics/friend3.png'}
+      ] %}
+      {% for friend in friends %}
+      <li onclick="openChat('{{ friend.name }}')">
+        <img
+          class="friend-avatar"
+          src="{{ friend.profile_pic or url_for('static', filename='profile_pics/default.png') }}"
+          alt="{{ friend.name }} Avatar"
+        >
+        {{ friend.name }}
+      </li>
+      {% endfor %}
     </ul>
 
-    <!-- Bottom User Profile Box -->
+    <!-- Bottom user profile box -->
     <div class="user-profile">
-      <!-- The user's avatar. If none set, use default -->
       <img
         class="user-avatar"
         src="{{ profile_pic or url_for('static', filename='profile_pics/default.png') }}"
@@ -188,10 +203,9 @@
       >
       <div class="user-info">
         <div class="user-name">{{ username or "User" }}</div>
-        <div class="user-status">Idle</div>
       </div>
       <div class="user-icons">
-        <!-- Example icons: Microphone, Headphones, Cog (Settings) -->
+        <!-- Example icons: microphone, headphones, cog -->
         <i class="fa fa-microphone"></i>
         <i class="fa fa-headphones"></i>
         <i class="fa fa-cog"></i>
@@ -219,14 +233,6 @@
   </div>
 </div>
 
-<script>
-  // Placeholder function for switching chat content
-  function openChat(friendName) {
-    const chatContent = document.getElementById('chatContent');
-    chatContent.innerHTML = `
-      <p><strong>Chat with ${friendName}</strong></p>
-      <p>(Here you can load or display chat messages with ${friendName}...)</p>
-    `;
-  }
-</script>
+<!-- Reference the external JavaScript file for user_home functionality -->
+<script src="{{ url_for('static', filename='js/user_home.js') }}"></script>
 {% endblock %}
