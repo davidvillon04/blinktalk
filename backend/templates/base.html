@@ -22,6 +22,35 @@
             background: linear-gradient(135deg, #b71c1c, #e64a19, #fdd835);
             min-height: 100vh;
             color: #ffffff;
+            position: relative; /* create a stacking context */
+            overflow-x: hidden; /* optional, prevents horizontal scroll */
+         }
+
+         /*
+          The pseudo-element overlay:
+          - covers the entire screen
+          - uses a semi-transparent black
+          - sits behind the page content
+        */
+         body::before {
+            content: "";
+            position: fixed; /* so it stays put even when scrolling */
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.329); /* adjust alpha as desired */
+            pointer-events: none; /* don't block clicks */
+            z-index: 0; /* behind content */
+         }
+
+         /*
+          Make all direct children of body (i.e., your page content) appear above the overlay
+          by giving them a higher z-index. This ensures the overlay is "behind" everything.
+        */
+         body > * {
+            position: relative;
+            z-index: 1;
          }
 
          h1,
