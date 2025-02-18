@@ -1,7 +1,8 @@
 {% extends "base.html" %}
+
 {% block content %}
 <style>
-  /* Ensure full viewport usage */
+  /* Ensure full usage of the viewport */
   html, body {
     margin: 0;
     padding: 0;
@@ -9,7 +10,6 @@
     height: 100%;
   }
 
-  /* Remove any container restrictions from base.html */
   .container {
     max-width: none !important;
     margin: 0 !important;
@@ -18,7 +18,6 @@
     height: 100% !important;
   }
 
-  /* Main app container spanning full width and height */
   .app-container {
     display: flex;
     width: 100%;
@@ -28,8 +27,10 @@
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   }
 
-  /* Left column: friends list */
+  /* Left column: friends list + user profile at bottom */
   .friends-column {
+    display: flex;            /* important: become a flex container */
+    flex-direction: column;   /* stack children vertically */
     width: 250px;
     background-color: #202225;
     padding: 1rem;
@@ -45,13 +46,13 @@
   .friend-list {
     list-style: none;
     padding-left: 0;
+    margin: 0;
+    flex: 1; /* take remaining vertical space */
   }
 
   .friend-list li {
-    display: flex;
-    align-items: center;
     padding: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
     background-color: #2f3136;
     border-radius: 4px;
     cursor: pointer;
@@ -62,12 +63,53 @@
     background-color: #3a3d41;
   }
 
-  .friend-avatar {
+  /* User Profile at bottom */
+  .user-profile {
+    display: flex;
+    align-items: center;
+    margin-top: auto;       /* pushes this box to the bottom of the column */
+    padding: 0.5rem;
+    background-color: #2f3136;
+    border-radius: 4px;
+  }
+
+  .user-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
     margin-right: 0.5rem;
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1; /* push icons to the right */
+  }
+
+  .user-name {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .user-status {
+    font-size: 0.8rem;
+    color: #bbb;
+  }
+
+  .user-icons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .user-icons i {
+    cursor: pointer;
+    font-size: 1rem;
+    color: #bbb;
+  }
+
+  .user-icons i:hover {
+    color: #fff;
   }
 
   /* Center column: chat area */
@@ -126,28 +168,38 @@
 </style>
 
 <div class="app-container">
-  <!-- Left Column: Friends List -->
+  <!-- Left Column: Friends List + Bottom User Profile -->
   <div class="friends-column">
     <h2>Friends</h2>
     <ul class="friend-list">
-      {# Simulated friend list; in production, pass a list of friend objects #}
-      {% set friends = [
-         {'name': 'Friend 1', 'profile_pic': '/static/profile_pics/friend1.png'},
-         {'name': 'Friend 2', 'profile_pic': None},
-         {'name': 'Friend 3', 'profile_pic': '/static/profile_pics/friend3.png'}
-      ] %}
-      {% for friend in friends %}
-      <li onclick="openChat('{{ friend.name }}')">
-        <img class="friend-avatar" 
-             src="{{ friend.profile_pic or url_for('static', filename='profile_pics/default.png') }}" 
-             alt="{{ friend.name }} Avatar">
-        {{ friend.name }}
-      </li>
-      {% endfor %}
+      <!-- Hard-coded friends for now -->
+      <li onclick="openChat('Friend 1')">Friend 1</li>
+      <li onclick="openChat('Friend 2')">Friend 2</li>
+      <li onclick="openChat('Friend 3')">Friend 3</li>
     </ul>
+
+    <!-- Bottom User Profile Box -->
+    <div class="user-profile">
+      <!-- The user's avatar. If none set, use default -->
+      <img
+        class="user-avatar"
+        src="{{ profile_pic or url_for('static', filename='profile_pics/default.png') }}"
+        alt="User Avatar"
+      >
+      <div class="user-info">
+        <div class="user-name">{{ username or "User" }}</div>
+        <div class="user-status">Idle</div>
+      </div>
+      <div class="user-icons">
+        <!-- Example icons: Microphone, Headphones, Cog (Settings) -->
+        <i class="fa fa-microphone"></i>
+        <i class="fa fa-headphones"></i>
+        <i class="fa fa-cog"></i>
+      </div>
+    </div>
   </div>
 
-  <!-- Center Column: Chat Area -->
+  <!-- Center Column: Chat -->
   <div class="chat-column">
     <div class="chat-header">
       <h2>Welcome back, {{ username or 'User' }}!</h2>
@@ -168,7 +220,7 @@
 </div>
 
 <script>
-  // Placeholder function to simulate switching chat content when a friend is clicked
+  // Placeholder function for switching chat content
   function openChat(friendName) {
     const chatContent = document.getElementById('chatContent');
     chatContent.innerHTML = `
