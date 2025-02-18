@@ -3,7 +3,6 @@ import mysql.connector
 from mysql.connector import errorcode
 from datetime import date
 import os
-from flask import send_from_directory
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -27,7 +26,7 @@ def get_db_connection():
         return None
 
 
-# Configure upload folder for profile pictures
+# Configure an upload folder for profile pictures
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "profile_pics")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -51,7 +50,7 @@ def about():
 def register():
     form_data = {}  # Dictionary to pass form data back to the template
     if request.method == "POST":
-        # Get form data and store it in form_data so it can be re-used in the template
+        # Get form data and store it so it can be re-used in the template
         form_data = request.form.to_dict()
         username = form_data.get("username", "")
         password = form_data.get("password", "")
@@ -63,12 +62,12 @@ def register():
 
         # Check that all required fields are filled out
         if not (username and password and confirm and email and month and day and year):
-            flash("Please fill out all required fields!")
+            form_data["error_general"] = "Please fill out all required fields!"
             return render_template("register.html", form_data=form_data)
 
         # Check if passwords match
         if password != confirm:
-            flash("Passwords do not match!")
+            form_data["error_password_mismatch"] = "Passwords do not match."
             return render_template("register.html", form_data=form_data)
 
         # Convert username to lowercase for case-insensitive check
@@ -78,21 +77,30 @@ def register():
         try:
             dob = date(int(year), int(month), int(day))
         except ValueError:
-            flash("Invalid date of birth!")
+            form_data["error_dob"] = "Invalid date of birth!"
             return render_template("register.html", form_data=form_data)
 
         # Connect to MySQL
         conn = get_db_connection()
         if conn is None:
-            flash("Database connection error!")
+            form_data["error_general"] = "Database connection error!"
             return render_template("register.html", form_data=form_data)
         cursor = conn.cursor()
 
         # Check if the username already exists (case-insensitive)
-        check_query = "SELECT id FROM users WHERE LOWER(username) = %s"
-        cursor.execute(check_query, (lowercase_username,))
+        check_user_query = "SELECT id FROM users WHERE LOWER(username) = %s"
+        cursor.execute(check_user_query, (lowercase_username,))
         if cursor.fetchone():
-            flash("Username already exists!")
+            form_data["error_username_taken"] = "Username is already taken."
+            cursor.close()
+            conn.close()
+            return render_template("register.html", form_data=form_data)
+
+        # Check if the email already exists (case-insensitive)
+        check_email_query = "SELECT id FROM users WHERE LOWER(email) = LOWER(%s)"
+        cursor.execute(check_email_query, (email.lower(),))
+        if cursor.fetchone():
+            form_data["error_email_taken"] = "Email is already registered."
             cursor.close()
             conn.close()
             return render_template("register.html", form_data=form_data)
@@ -107,18 +115,17 @@ def register():
         cursor.close()
         conn.close()
 
-        flash(
-            "Account created successfully! Please set your profile picture, or skip to do it later."
-        )
+        # After successful registration, redirect to the new user page (for profile picture setup)
         return redirect(url_for("new_user"))
 
-    # For GET requests or if there was a validation error, re-render the form with current form_data
+    # For GET requests or validation errors, re-render the form with current form_data
     return render_template("register.html", form_data=form_data)
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
+        # (Implement login logic later)
         flash("Login functionality will be implemented soon.")
         return redirect(url_for("login"))
     return render_template("login.html")
@@ -141,6 +148,23 @@ def check_username():
     return jsonify({"exists": exists})
 
 
+@app.route("/check_email", methods=["POST"])
+def check_email():
+    data = request.get_json()
+    email = data.get("email", "").lower()
+
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({"error": "Database connection error"}), 500
+    cursor = conn.cursor()
+    query = "SELECT id FROM users WHERE LOWER(email) = %s"
+    cursor.execute(query, (email,))
+    exists = cursor.fetchone() is not None
+    cursor.close()
+    conn.close()
+    return jsonify({"exists": exists})
+
+
 @app.route("/new_user", methods=["GET", "POST"])
 def new_user():
     if request.method == "POST":
@@ -149,7 +173,7 @@ def new_user():
             flash("Profile picture setup skipped.")
             return redirect(url_for("index"))
 
-        # Otherwise, process the uploaded file
+        # Process the uploaded file
         if "profile_pic" not in request.files:
             flash("No file part in the request!")
             return redirect(request.url)
@@ -160,7 +184,7 @@ def new_user():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-            # Update the user's record with the file path if needed (not implemented here)
+            # (Optionally, update the user's record with the file path)
             flash("Profile picture uploaded successfully!")
             return redirect(url_for("index"))
         else:

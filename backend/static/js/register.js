@@ -28,45 +28,59 @@ if (emailInput) {
    });
 }
 
-// 3. Username Live Validation & Availability Check
+// 3. Username Live Validation & Debounced Availability Check
+let usernameTimer;
 const usernameInput = document.getElementById("username");
 const usernameHint = document.getElementById("usernameHint");
 const usernameExists = document.getElementById("usernameExists");
 
 if (usernameInput) {
+   // On focus, show hint only if current value is invalid (and not empty)
    usernameInput.addEventListener("focus", function () {
-      usernameHint.style.display = "block";
+      const username = usernameInput.value;
+      const regex = /^[A-Za-z0-9_.]{2,32}$/;
+      if (username.trim() !== "" && !regex.test(username)) {
+         usernameHint.style.display = "block";
+      } else {
+         usernameHint.style.display = "none";
+      }
    });
 
    usernameInput.addEventListener("input", function () {
       const username = usernameInput.value;
       const regex = /^[A-Za-z0-9_.]{2,32}$/;
-      if (regex.test(username)) {
-         usernameHint.style.color = "#aaffaa";
-      } else {
+
+      // If invalid, show hint; if valid, hide it.
+      if (!regex.test(username)) {
+         usernameHint.style.display = "block";
          usernameHint.style.color = "#ffaaaa";
+      } else {
+         usernameHint.style.display = "none";
       }
 
+      // Clear any existing debounce timer
+      clearTimeout(usernameTimer);
       if (username.length > 1) {
-         fetch("/check_username", {
-            method: "POST",
-            headers: {
-               "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username: username }),
-         })
-            .then((response) => response.json())
-            .then((data) => {
-               if (data.exists) {
-                  usernameExists.style.display = "block";
-                  usernameExists.textContent = "This username is already taken.";
-               } else {
-                  usernameExists.style.display = "none";
-               }
+         // Wait 2000ms (2 seconds) after user stops typing before checking availability.
+         usernameTimer = setTimeout(() => {
+            fetch("/check_username", {
+               method: "POST",
+               headers: { "Content-Type": "application/json" },
+               body: JSON.stringify({ username: username.toLowerCase() }),
             })
-            .catch((error) => {
-               console.error("Error checking username:", error);
-            });
+               .then((response) => response.json())
+               .then((data) => {
+                  if (data.exists) {
+                     usernameExists.style.display = "block";
+                     usernameExists.textContent = "This username is already taken.";
+                  } else {
+                     usernameExists.style.display = "none";
+                  }
+               })
+               .catch((error) => {
+                  console.error("Error checking username:", error);
+               });
+         }, 500);
       } else {
          usernameExists.style.display = "none";
       }
@@ -135,21 +149,18 @@ const daySelect = document.getElementById("day");
 const yearSelect = document.getElementById("year");
 
 if (monthSelect && daySelect && yearSelect) {
-   // Populate the year dropdown from current year down to currentYear - 150
    const currentYear = new Date().getFullYear();
    for (let y = currentYear; y >= currentYear - 150; y--) {
-      const option = document.createElement("option");
-      option.value = y;
-      option.textContent = y;
-      yearSelect.appendChild(option);
+      const opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = y;
+      yearSelect.appendChild(opt);
    }
 
-   // Helper: Check if leap year
    function isLeapYear(y) {
       return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
    }
 
-   // Helper: Days in month
    function getDaysInMonth(m, y) {
       if (!m || !y) return 31;
       if (m === 2) {
@@ -161,17 +172,16 @@ if (monthSelect && daySelect && yearSelect) {
       }
    }
 
-   // Update days whenever month or year changes
    function updateDays() {
       const m = parseInt(monthSelect.value);
       const y = parseInt(yearSelect.value);
       daySelect.innerHTML = '<option value="" disabled selected>Day</option>';
       const totalDays = getDaysInMonth(m, y);
       for (let d = 1; d <= totalDays; d++) {
-         const option = document.createElement("option");
-         option.value = d;
-         option.textContent = d;
-         daySelect.appendChild(option);
+         const opt = document.createElement("option");
+         opt.value = d;
+         opt.textContent = d;
+         daySelect.appendChild(opt);
       }
    }
 

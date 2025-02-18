@@ -1,99 +1,51 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="
-  max-width: 400px; 
-  margin: 4rem auto; 
-  background: rgba(0, 0, 0, 0.6); 
-  padding: 2rem; 
-  border-radius: 8px;
-">
-  <h2 style="margin-bottom: 0.5rem;">Create an account</h2>
+<div style="max-width: 400px; margin: 4rem auto; background: rgba(0, 0, 0, 0.6); padding: 2rem; border-radius: 8px;">
+  <h2 style="margin-bottom: 1rem;">Create an account</h2>
 
-  <!-- Display flash messages -->
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <div class="flash-messages">
-        {% for message in messages %}
-          <p>{{ message }}</p>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
+  <!-- General inline error (if any) -->
+  {% if form_data.get("error_general") %}
+    <div style="color: #ff4444; margin-bottom: 1rem; font-size: 0.9em;">
+      {{ form_data["error_general"] }}
+    </div>
+  {% endif %}
 
-  <!-- Registration Form -->
   <form method="POST" id="registerForm" style="display: flex; flex-direction: column; gap: 1rem;" novalidate>
-    <!-- Email -->
+    <!-- Email Field -->
     <div>
-      <label for="email" style="display: block; margin-bottom: 0.3rem;">
-        EMAIL <span style="color: #ffaaaa;">*</span>
-      </label>
-      <input 
-        type="text" 
-        id="email" 
-        name="email" 
-        placeholder="Email"
-        value="{{ form_data.get('email', '') }}"
-        style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;"
-        required
-      >
-      <div id="emailError" style="font-size: 0.9em; margin-top: 4px; color: #ffaaaa; display: none;"></div>
+      <label for="email" style="display: block; margin-bottom: 0.3rem;">EMAIL <span style="color: #ffaaaa;">*</span></label>
+      <input type="text" id="email" name="email" placeholder="Email" value="{{ form_data.get('email', '') }}"
+             style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;" required>
+      {% if form_data.get("error_email_taken") %}
+        <div style="color: #ff4444; font-size: 0.9em; margin-top: 4px;">{{ form_data["error_email_taken"] }}</div>
+      {% endif %}
+      <div id="emailError" style="color: #ffaaaa; font-size: 0.9em; margin-top: 4px; display: none;"></div>
+      <div id="emailExists" style="color: #ff4444; font-size: 0.9em; margin-top: 4px; display: none;"></div>
     </div>
 
-    <!-- Username -->
+    <!-- Username Field -->
     <div>
-      <label for="username" style="display: block; margin-bottom: 0.3rem;">
-        USERNAME <span style="color: #ffaaaa;">*</span>
-      </label>
-      <input 
-        type="text" 
-        id="username" 
-        name="username" 
-        placeholder="Username"
-        value="{{ form_data.get('username', '') }}"
-        style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;"
-        required
-      >
+      <label for="username" style="display: block; margin-bottom: 0.3rem;">USERNAME <span style="color: #ffaaaa;">*</span></label>
+      <input type="text" id="username" name="username" placeholder="Username" value="{{ form_data.get('username', '') }}"
+             style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;" required>
+      {% if form_data.get("error_username_taken") %}
+        <div style="color: #ff4444; font-size: 0.9em; margin-top: 4px;">{{ form_data["error_username_taken"] }}</div>
+      {% endif %}
       <div id="usernameHint" style="font-size: 0.9em; margin-top: 4px; color: #ffaaaa; display: none;">
         Username must be 2-32 characters long and can only contain letters, numbers, underscores (_) and periods (.).
       </div>
-      <div id="usernameExists" style="font-size: 0.9em; margin-top: 4px; color: #ff4444; display: none;">
-        This username is already taken.
-      </div>
+      <div id="usernameExists" style="font-size: 0.9em; color: #ff4444; margin-top: 4px; display: none;"></div>
     </div>
 
-    <!-- Password -->
+    <!-- Password Field -->
     <div>
-      <label for="password" style="display: block; margin-bottom: 0.3rem;">
-        PASSWORD <span style="color: #ffaaaa;">*</span>
-      </label>
-      <div style="display: inline-flex; align-items: center; position: relative; width: 100%;">
-        <input 
-          type="password" 
-          id="password" 
-          name="password" 
-          placeholder="Password"
-          style="
-            flex: 1;
-            padding: 0.5rem;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            padding-right: 3rem;
-          "
-          required
-        >
-        <button
-          type="button"
-          onclick="togglePassword('password', this)"
-          style="
-            position: absolute;
-            right: 0.5rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #000000;
-          "
-        >
+      <label for="password" style="display: block; margin-bottom: 0.3rem;">PASSWORD <span style="color: #ffaaaa;">*</span></label>
+      <div style="position: relative;">
+        <input type="password" id="password" name="password" placeholder="Password"
+               style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; padding-right: 3rem;" required>
+        <button type="button" onclick="togglePassword('password', this)"
+                style="position: absolute; right: 0.5rem; top: 0.4rem; background: none; border: none; cursor: pointer; color: #000000;">
           Show
         </button>
       </div>
@@ -103,49 +55,26 @@
       </div>
     </div>
 
-    <!-- Confirm Password -->
+    <!-- Confirm Password Field -->
     <div>
-      <label for="confirm" style="display: block; margin-bottom: 0.3rem;">
-        CONFIRM PASSWORD <span style="color: #ffaaaa;">*</span>
-      </label>
-      <div style="display: inline-flex; align-items: center; position: relative; width: 100%;">
-        <input 
-          type="password" 
-          id="confirm" 
-          name="confirm" 
-          placeholder="Confirm Password"
-          style="
-            flex: 1;
-            padding: 0.5rem;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            padding-right: 3rem;
-          "
-          required
-        >
-        <button
-          type="button"
-          onclick="togglePassword('confirm', this)"
-          style="
-            position: absolute;
-            right: 0.5rem;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #000000;
-          "
-        >
+      <label for="confirm" style="display: block; margin-bottom: 0.3rem;">CONFIRM PASSWORD <span style="color: #ffaaaa;">*</span></label>
+      <div style="position: relative;">
+        <input type="password" id="confirm" name="confirm" placeholder="Confirm Password"
+               style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc; padding-right: 3rem;" required>
+        <button type="button" onclick="togglePassword('confirm', this)"
+                style="position: absolute; right: 0.5rem; top: 0.4rem; background: none; border: none; cursor: pointer; color: #000000;">
           Show
         </button>
       </div>
-      <div id="confirmError" style="font-size: 0.9em; margin-top: 4px; color: #ff4444; display: none;"></div>
+      {% if form_data.get("error_password_mismatch") %}
+        <div style="color: #ff4444; font-size: 0.9em; margin-top: 4px;">{{ form_data["error_password_mismatch"] }}</div>
+      {% endif %}
+      <div id="confirmError" style="color: #ff4444; font-size: 0.9em; margin-top: 4px; display: none;"></div>
     </div>
 
-    <!-- Date of Birth -->
+    <!-- Date of Birth Fields -->
     <div>
-      <label style="display: block; margin-bottom: 0.3rem;">
-        DATE OF BIRTH <span style="color: #ffaaaa;">*</span>
-      </label>
+      <label style="display: block; margin-bottom: 0.3rem;">DATE OF BIRTH <span style="color: #ffaaaa;">*</span></label>
       <div style="display: flex; gap: 0.5rem;">
         <select id="month" name="month" required style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;">
           <option value="" disabled selected>Month</option>
@@ -165,47 +94,38 @@
 
         <select id="day" name="day" required style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;">
           <option value="" disabled selected>Day</option>
-          <!-- The day options will be updated by JavaScript; optionally pre-select if form_data exists -->
+          <!-- Day options will be populated by JavaScript -->
         </select>
 
         <select id="year" name="year" required style="flex: 1; padding: 0.5rem; border-radius: 4px; border: 1px solid #ccc;">
           <option value="" disabled selected>Year</option>
-          <!-- The year options are populated by JavaScript -->
+          <!-- Year options will be populated by JavaScript -->
         </select>
       </div>
+      {% if form_data.get("error_dob") %}
+        <div style="color: #ff4444; font-size: 0.9em; margin-top: 4px;">
+          {{ form_data["error_dob"] }}
+        </div>
+      {% endif %}
     </div>
 
-    <!-- Continue Button -->
-    <input 
-      type="submit" 
-      value="Continue"
-      style="
-        background-color: #0a3a54; 
-        color: #ffffff; 
-        border: none; 
-        padding: 0.7rem; 
-        border-radius: 4px; 
-        cursor: pointer; 
-        font-size: 1rem;
-      "
-    >
+    <!-- Submit Button -->
+    <input type="submit" value="Continue" style="background-color: #0a3a54; color: #ffffff; border: none; padding: 0.7rem; border-radius: 4px; cursor: pointer; font-size: 1rem;">
   </form>
 
-  <!-- Terms & Privacy Note -->
-  <p style="margin-top: 1rem; font-size: 0.85rem;">
+  <p style="margin-top: 1rem; font-size: 0.85em;">
     By registering, you agree to BlinkTalk's 
     <a href="#" style="color: #cceeff; text-decoration: underline;">Terms of Service</a> 
     and 
     <a href="#" style="color: #cceeff; text-decoration: underline;">Privacy Policy</a>.
   </p>
 
-  <!-- Already have an account? -->
-  <p style="margin-top: 1rem; font-size: 0.9rem;">
+  <p style="margin-top: 1rem; font-size: 0.9em;">
     Already have an account?
     <a href="{{ url_for('login') }}" style="color: #cceeff; text-decoration: underline;">Login</a>
   </p>
 </div>
 
-<!-- Instead of inline JS, reference an external file -->
+<!-- Reference the external JavaScript file -->
 <script src="{{ url_for('static', filename='js/register.js') }}"></script>
 {% endblock %}
