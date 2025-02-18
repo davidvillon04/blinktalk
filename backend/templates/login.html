@@ -19,11 +19,10 @@
   <input type="text" id="username" name="username" required>
 
   <label for="password">Password:</label>
-  <div style="position: relative;">
+  <!-- Wrap the password input and toggle button in an inline-flex container -->
+  <div style="display: inline-flex; align-items: center; gap: 0.5rem;">
     <input type="password" id="password" name="password" required>
-    <button type="button"
-            style="position: absolute; right: 0.5rem; top: 0.5rem; background: none; border: none; cursor: pointer;"
-            onclick="togglePassword('password', this)">Show</button>
+    <button type="button" onclick="togglePassword('password', this)">Show</button>
   </div>
 
   <input type="submit" value="Sign In">
@@ -33,7 +32,7 @@
 <p>Don't have an account? <a href="{{ url_for('register') }}">Create Account</a></p>
 
 <script>
-  // Same toggle function
+  // Toggle password visibility with text button
   function togglePassword(inputId, btn) {
     const inputField = document.getElementById(inputId);
     if (inputField.type === "password") {
