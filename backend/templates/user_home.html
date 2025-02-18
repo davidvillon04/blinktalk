@@ -1,8 +1,148 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="max-width: 600px; margin: 4rem auto; text-align: center;">
-  <h2>Welcome to Your Home Page!</h2>
-  <p>This is a placeholder for the user home page. More features will be implemented later.</p>
+<style>
+  /* Basic Reset */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  /* Container for the entire app layout */
+  .app-container {
+    display: flex;
+    height: calc(100vh - 60px); /* Adjust if you have a header or nav */
+    background-color: #2f3136;  /* Discord-ish background color */
+    color: #fff;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  /* Left column (friends list) */
+  .friends-column {
+    width: 200px; /* narrower than before */
+    background-color: #202225;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+
+  .friends-column h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: #bbb;
+  }
+
+  .friend-list {
+    list-style: none;
+  }
+
+  .friend-list li {
+    padding: 0.5rem;
+    margin-bottom: 0.3rem;
+    background-color: #2f3136;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .friend-list li:hover {
+    background-color: #3a3d41;
+  }
+
+  /* Center column (chat) */
+  .chat-column {
+    flex: 1; /* take the remaining space after left & right columns */
+    display: flex;
+    flex-direction: column;
+    background-color: #36393f;
+    padding: 1rem;
+  }
+
+  .chat-header {
+    margin-bottom: 1rem;
+  }
+
+  .chat-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .chat-content {
+    flex: 1; /* push footer to bottom */
+    background-color: #40444b;
+    border-radius: 4px;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+
+  .chat-content p {
+    margin-bottom: 1rem;
+  }
+
+  .chat-footer {
+    margin-top: 1rem;
+  }
+
+  /* Right column (activity feed placeholder) */
+  .activity-column {
+    width: 300px; /* or 33% if you want a third of the screen */
+    background-color: #2f3136;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+
+  .activity-column h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: #bbb;
+  }
+</style>
+
+<div class="app-container">
+  <!-- Left Column: Friends List -->
+  <div class="friends-column">
+    <h2>Friends</h2>
+    <ul class="friend-list">
+      <!-- Hard-coded for now -->
+      <li onclick="openChat('Friend 1')">Friend 1</li>
+      <li onclick="openChat('Friend 2')">Friend 2</li>
+      <li onclick="openChat('Friend 3')">Friend 3</li>
+    </ul>
+  </div>
+
+  <!-- Center Column: Chat -->
+  <div class="chat-column">
+    <div class="chat-header">
+      <h2>Welcome back, {{ username or 'User' }}!</h2>
+    </div>
+
+    <div id="chatContent" class="chat-content">
+      <p>Select a friend from the list to start chatting!</p>
+    </div>
+
+    <div class="chat-footer">
+      <input 
+        type="text" 
+        placeholder="Type your message..." 
+        style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none;"
+      >
+    </div>
+  </div>
+
+  <!-- Right Column: Activity Feed Placeholder -->
+  <div class="activity-column">
+    <h2>Activity Feed</h2>
+    <p>This area could show upcoming events, friend statuses, or other data.</p>
+  </div>
 </div>
+
+<script>
+  // Basic placeholder function to show switching chat content
+  function openChat(friendName) {
+    const chatContent = document.getElementById('chatContent');
+    chatContent.innerHTML = `
+      <p><strong>Chat with ${friendName}</strong></p>
+      <p>(Here you can load or display the chat messages with ${friendName}...)</p>
+    `;
+  }
+</script>
 {% endblock %}

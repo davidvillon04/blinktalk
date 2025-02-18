@@ -254,11 +254,23 @@ def new_user():
 
 @app.route("/user_home")
 def user_home():
+    # If not logged in, redirect:
     if "user_id" not in session:
         flash("Please log in first.")
         return redirect(url_for("login"))
-    # Optionally, fetch user info from DB or session to greet them by name
-    return render_template("user_home.html")
+
+    user_id = session["user_id"]
+    # Fetch username from DB:
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT username FROM users WHERE id = %s", (user_id,))
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    username = row["username"] if row else "User"
+
+    return render_template("user_home.html", username=username)
 
 
 if __name__ == "__main__":
