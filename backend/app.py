@@ -265,7 +265,6 @@ def new_user():
             cursor.close()
             conn.close()
 
-            flash("Profile picture uploaded successfully!")
             return redirect(url_for("user_home"))
         else:
             flash("Invalid file type! Allowed types: png, jpg, jpeg, gif.")
