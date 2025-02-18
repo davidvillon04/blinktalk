@@ -1,8 +1,7 @@
 {% extends "base.html" %}
-
 {% block content %}
 <style>
-  /* Force html/body to fill the entire viewport */
+  /* Ensure full viewport usage */
   html, body {
     margin: 0;
     padding: 0;
@@ -10,7 +9,7 @@
     height: 100%;
   }
 
-  /* Override any .container from base.html if it exists */
+  /* Remove any container restrictions from base.html */
   .container {
     max-width: none !important;
     margin: 0 !important;
@@ -19,19 +18,19 @@
     height: 100% !important;
   }
 
-  /* Main app container that spans full width/height */
+  /* Main app container spanning full width and height */
   .app-container {
     display: flex;
     width: 100%;
-    height: 100vh; /* full vertical height of viewport */
-    background-color: #2f3136;  /* Discord-ish background color */
+    height: 100vh;
+    background-color: #2f3136;
     color: #fff;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   }
 
   /* Left column: friends list */
   .friends-column {
-    width: 250px; /* fixed width for left column */
+    width: 250px;
     background-color: #202225;
     padding: 1rem;
     overflow-y: auto;
@@ -49,8 +48,10 @@
   }
 
   .friend-list li {
+    display: flex;
+    align-items: center;
     padding: 0.5rem;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.5rem;
     background-color: #2f3136;
     border-radius: 4px;
     cursor: pointer;
@@ -61,9 +62,17 @@
     background-color: #3a3d41;
   }
 
-  /* Center column: main chat area */
+  .friend-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 0.5rem;
+  }
+
+  /* Center column: chat area */
   .chat-column {
-    flex: 1; /* takes all remaining space after left & right columns */
+    flex: 1;
     display: flex;
     flex-direction: column;
     background-color: #36393f;
@@ -79,7 +88,7 @@
   }
 
   .chat-content {
-    flex: 1; /* push footer to bottom */
+    flex: 1;
     background-color: #40444b;
     border-radius: 4px;
     padding: 1rem;
@@ -101,9 +110,9 @@
     border: none;
   }
 
-  /* Right column: activity feed placeholder */
+  /* Right column: activity feed */
   .activity-column {
-    width: 300px; /* fixed width for right column */
+    width: 300px;
     background-color: #2f3136;
     padding: 1rem;
     overflow-y: auto;
@@ -121,24 +130,31 @@
   <div class="friends-column">
     <h2>Friends</h2>
     <ul class="friend-list">
-      <!-- Hard-coded friends for now -->
-      <li onclick="openChat('Friend 1')">Friend 1</li>
-      <li onclick="openChat('Friend 2')">Friend 2</li>
-      <li onclick="openChat('Friend 3')">Friend 3</li>
+      {# Simulated friend list; in production, pass a list of friend objects #}
+      {% set friends = [
+         {'name': 'Friend 1', 'profile_pic': '/static/profile_pics/friend1.png'},
+         {'name': 'Friend 2', 'profile_pic': None},
+         {'name': 'Friend 3', 'profile_pic': '/static/profile_pics/friend3.png'}
+      ] %}
+      {% for friend in friends %}
+      <li onclick="openChat('{{ friend.name }}')">
+        <img class="friend-avatar" 
+             src="{{ friend.profile_pic or url_for('static', filename='profile_pics/default.png') }}" 
+             alt="{{ friend.name }} Avatar">
+        {{ friend.name }}
+      </li>
+      {% endfor %}
     </ul>
   </div>
 
-  <!-- Center Column: Chat -->
+  <!-- Center Column: Chat Area -->
   <div class="chat-column">
     <div class="chat-header">
-      <!-- In app.py, pass username to the template. Example: render_template("user_home.html", username=username) -->
       <h2>Welcome back, {{ username or 'User' }}!</h2>
     </div>
-
     <div id="chatContent" class="chat-content">
       <p>Select a friend from the list to start chatting!</p>
     </div>
-
     <div class="chat-footer">
       <input type="text" placeholder="Type your message..." />
     </div>
@@ -152,7 +168,7 @@
 </div>
 
 <script>
-  // Basic placeholder function for switching chat content
+  // Placeholder function to simulate switching chat content when a friend is clicked
   function openChat(friendName) {
     const chatContent = document.getElementById('chatContent');
     chatContent.innerHTML = `
