@@ -18,5 +18,9 @@
         "titleBar.inactiveBackground": "#07f1a699",
         "titleBar.inactiveForeground": "#15202b99"
     },
-    "peacock.color": "#07f1a6"
+    "peacock.color": "#07f1a6",
+    "cSpell.words": [
+        "blinktalk",
+        "jsonify"
+    ]
 }

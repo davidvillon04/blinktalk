@@ -44,22 +44,12 @@ def register():
         password = form_data.get("password", "")
         confirm = form_data.get("confirm", "")
         email = form_data.get("email", "")
-        phone = form_data.get("phone", "")
         month = form_data.get("month", "")
         day = form_data.get("day", "")
         year = form_data.get("year", "")
 
         # Check that all required fields are filled out
-        if not (
-            username
-            and password
-            and confirm
-            and email
-            and phone
-            and month
-            and day
-            and year
-        ):
+        if not (username and password and confirm and email and month and day and year):
             flash("Please fill out all required fields!")
             return render_template("register.html", form_data=form_data)
 
@@ -95,8 +85,10 @@ def register():
             return render_template("register.html", form_data=form_data)
 
         # Insert new user into the table (Note: For production, hash the password!)
-        insert_query = "INSERT INTO users (username, password, email, phone, dob) VALUES (%s, %s, %s, %s, %s)"
-        cursor.execute(insert_query, (lowercase_username, password, email, phone, dob))
+        insert_query = (
+            "INSERT INTO users (username, password, email, dob) VALUES (%s, %s, %s, %s)"
+        )
+        cursor.execute(insert_query, (lowercase_username, password, email, dob))
         conn.commit()
 
         cursor.close()
