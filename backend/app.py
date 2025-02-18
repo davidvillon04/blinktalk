@@ -4,6 +4,7 @@ from mysql.connector import errorcode
 from datetime import date
 import os
 from flask import send_from_directory
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for flash messages
@@ -24,6 +25,16 @@ def get_db_connection():
     except mysql.connector.Error as err:
         print(f"Error connecting to MySQL: {err}")
         return None
+
+
+# Configure upload folder for profile pictures
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "profile_pics")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route("/")
@@ -96,8 +107,10 @@ def register():
         cursor.close()
         conn.close()
 
-        flash("Account created successfully! Please log in.")
-        return redirect(url_for("login"))
+        flash(
+            "Account created successfully! Please set your profile picture, or skip to do it later."
+        )
+        return redirect(url_for("new_user"))
 
     # For GET requests or if there was a validation error, re-render the form with current form_data
     return render_template("register.html", form_data=form_data)
@@ -128,27 +141,13 @@ def check_username():
     return jsonify({"exists": exists})
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
-
-# Configure an upload folder (make sure this folder exists)
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "static", "profile_pics")
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
-@app.route("/set_profile_pic", methods=["GET", "POST"])
-def set_profile_pic():
+@app.route("/new_user", methods=["GET", "POST"])
+def new_user():
     if request.method == "POST":
         # Check if the user clicked "Skip"
         if "skip" in request.form:
-            # Redirect or set default profile picture for the user
             flash("Profile picture setup skipped.")
-            return redirect(url_for("index"))  # or wherever you want to go next
+            return redirect(url_for("index"))
 
         # Otherwise, process the uploaded file
         if "profile_pic" not in request.files:
@@ -159,17 +158,16 @@ def set_profile_pic():
             flash("No file selected!")
             return redirect(request.url)
         if file and allowed_file(file.filename):
-            # Secure the filename here if needed (e.g., using Werkzeug's secure_filename)
-            from werkzeug.utils import secure_filename
-
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-
-            # You'd typically update the user’s record in your database here.
+            # Update the user's record with the file path if needed (not implemented here)
             flash("Profile picture uploaded successfully!")
             return redirect(url_for("index"))
         else:
             flash("Invalid file type! Allowed types: png, jpg, jpeg, gif.")
             return redirect(request.url)
-
     return render_template("new_user.html")
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
