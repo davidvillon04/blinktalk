@@ -50,7 +50,6 @@ def about():
 def register():
     form_data = {}  # Dictionary to pass form data back to the template
     if request.method == "POST":
-        # Get form data and store it so it can be re-used in the template
         form_data = request.form.to_dict()
         username = form_data.get("username", "")
         password = form_data.get("password", "")
@@ -60,73 +59,63 @@ def register():
         day = form_data.get("day", "")
         year = form_data.get("year", "")
 
-        # Check that all required fields are filled out
         if not (username and password and confirm and email and month and day and year):
             form_data["error_general"] = "Please fill out all required fields!"
             return render_template("register.html", form_data=form_data)
 
-        # Check if passwords match
         if password != confirm:
             form_data["error_password_mismatch"] = "Passwords do not match."
             return render_template("register.html", form_data=form_data)
 
-        # Convert username to lowercase for case-insensitive check
         lowercase_username = username.lower()
 
-        # Convert DOB into a date object
         try:
             dob = date(int(year), int(month), int(day))
         except ValueError:
             form_data["error_dob"] = "Invalid date of birth!"
             return render_template("register.html", form_data=form_data)
 
-        # Connect to MySQL
         conn = get_db_connection()
         if conn is None:
             form_data["error_general"] = "Database connection error!"
             return render_template("register.html", form_data=form_data)
         cursor = conn.cursor()
 
-        # Instead of returning early, check both username and email errors
-        errors = {}
-
         check_user_query = "SELECT id FROM users WHERE LOWER(username) = %s"
         cursor.execute(check_user_query, (lowercase_username,))
         if cursor.fetchone():
-            errors["error_username_taken"] = "Username is already taken."
-
-        check_email_query = "SELECT id FROM users WHERE LOWER(email) = LOWER(%s)"
-        cursor.execute(check_email_query, (email.lower(),))
-        if cursor.fetchone():
-            errors["error_email_taken"] = "Email is already registered."
-
-        if errors:
-            form_data.update(errors)
+            form_data["error_username_taken"] = "Username is already taken."
             cursor.close()
             conn.close()
             return render_template("register.html", form_data=form_data)
 
-        # Insert new user into the table (Note: For production, hash the password!)
+        check_email_query = "SELECT id FROM users WHERE LOWER(email) = LOWER(%s)"
+        cursor.execute(check_email_query, (email.lower(),))
+        if cursor.fetchone():
+            form_data["error_email_taken"] = "Email is already registered."
+            cursor.close()
+            conn.close()
+            return render_template("register.html", form_data=form_data)
+
         insert_query = (
             "INSERT INTO users (username, password, email, dob) VALUES (%s, %s, %s, %s)"
         )
         cursor.execute(insert_query, (lowercase_username, password, email, dob))
         conn.commit()
-
         cursor.close()
         conn.close()
 
-        # After successful registration, redirect to the new user page (for profile picture setup)
+        flash(
+            "Account created successfully! Please set your profile picture, or skip to do it later."
+        )
         return redirect(url_for("new_user"))
 
-    # For GET requests or validation errors, re-render the form with current form_data
     return render_template("register.html", form_data=form_data)
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        # (Implement login logic later)
         flash("Login functionality will be implemented soon.")
         return redirect(url_for("login"))
     return render_template("login.html")
@@ -169,10 +158,10 @@ def check_email():
 @app.route("/new_user", methods=["GET", "POST"])
 def new_user():
     if request.method == "POST":
-        # Check if the user clicked "Skip"
+        # If the user clicks "Skip", redirect to user_home
         if "skip" in request.form:
             flash("Profile picture setup skipped.")
-            return redirect(url_for("index"))
+            return redirect(url_for("user_home"))
 
         # Process the uploaded file
         if "profile_pic" not in request.files:
@@ -185,13 +174,18 @@ def new_user():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-            # (Optionally, update the user's record with the file path)
             flash("Profile picture uploaded successfully!")
-            return redirect(url_for("index"))
+            return redirect(url_for("user_home"))
         else:
             flash("Invalid file type! Allowed types: png, jpg, jpeg, gif.")
             return redirect(request.url)
     return render_template("new_user.html")
+
+
+@app.route("/user_home")
+def user_home():
+    # A simple placeholder for the user's home page.
+    return render_template("user_home.html")
 
 
 if __name__ == "__main__":
