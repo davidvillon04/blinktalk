@@ -317,7 +317,7 @@ meter::-moz-meter-bar {
     display: flex;
     flex-direction: column;
     width: 250px;
-    background-color: rgba(32, 34, 37, 0.8);
+    background-color: rgba(32, 34, 37, 0.685);
     padding: 1rem;
     overflow-y: auto;
 }
@@ -416,7 +416,7 @@ meter::-moz-meter-bar {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: rgba(54, 57, 63, 0.534);
+    background-color: rgba(54, 57, 63, 0.452);
     padding: 1rem;
 }
 .chat-header {
@@ -448,7 +448,7 @@ meter::-moz-meter-bar {
 /* Right Column: Activity Feed */
 .activity-column {
     width: 500px;
-    background-color: rgba(32, 34, 37, 0.8);
+    background-color: rgba(32, 34, 37, 0.685);
     padding: 1rem;
     overflow-y: auto;
 }

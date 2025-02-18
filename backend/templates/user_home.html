@@ -1,11 +1,18 @@
 {% extends "base.html" %} {% block content %}
 <div class="app-container">
-   <!-- Left Column: Friends List + User Profile -->
+   <!-- Left Column: Requests, Friends List & User Profile -->
    <div class="friends-column">
+      <!-- Requests Header -->
+      <div class="requests-header" onclick="openRequests()" style="cursor: pointer">
+         <h2>Requests <span class="request-count" id="requestCount">3</span></h2>
+      </div>
+
+      <!-- Friends Header with Plus Icon -->
       <div class="friends-header">
          <h2>Friends</h2>
          <i class="fa-solid fa-plus" title="Add Friend" onclick="openAddFriend()"></i>
       </div>
+
       <ul class="friend-list">
          {% set friends = [ {'name': 'Friend 1', 'profile_pic': '/static/profile_pics/friend1.png'},
          {'name': 'Friend 2', 'profile_pic': None}, {'name': 'Friend 3', 'profile_pic':
@@ -20,7 +27,8 @@
          </li>
          {% endfor %}
       </ul>
-      <!-- Bottom user profile box -->
+
+      <!-- Bottom User Profile Box -->
       <div class="user-profile">
          <img
             class="user-avatar"
@@ -38,8 +46,9 @@
       </div>
    </div>
 
-   <!-- Center Column: Chat (or Add Friend) -->
+   <!-- Center Column: Chat or Requests UI -->
    <div class="chat-column" id="mainContent">
+      <!-- Default Chat UI -->
       <div class="chat-header">
          <h2>Welcome back, {{ username or 'User' }}!</h2>
       </div>
@@ -58,6 +67,6 @@
    </div>
 </div>
 
-<!-- Reference the external JavaScript file for user_home functionality -->
+<!-- Reference external JavaScript file for user_home functionality -->
 <script src="{{ url_for('static', filename='js/user_home.js') }}"></script>
 {% endblock %}
