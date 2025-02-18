@@ -2,25 +2,36 @@
 
 {% block content %}
 <style>
-  /* Basic Reset */
-  * {
+  /* Force html/body to fill the entire viewport */
+  html, body {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
   }
 
-  /* Container for the entire app layout */
+  /* Override any .container from base.html if it exists */
+  .container {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Main app container that spans full width/height */
   .app-container {
     display: flex;
-    height: calc(100vh - 60px); /* Adjust if you have a header or nav */
+    width: 100%;
+    height: 100vh; /* full vertical height of viewport */
     background-color: #2f3136;  /* Discord-ish background color */
     color: #fff;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   }
 
-  /* Left column (friends list) */
+  /* Left column: friends list */
   .friends-column {
-    width: 200px; /* narrower than before */
+    width: 250px; /* fixed width for left column */
     background-color: #202225;
     padding: 1rem;
     overflow-y: auto;
@@ -34,6 +45,7 @@
 
   .friend-list {
     list-style: none;
+    padding-left: 0;
   }
 
   .friend-list li {
@@ -49,9 +61,9 @@
     background-color: #3a3d41;
   }
 
-  /* Center column (chat) */
+  /* Center column: main chat area */
   .chat-column {
-    flex: 1; /* take the remaining space after left & right columns */
+    flex: 1; /* takes all remaining space after left & right columns */
     display: flex;
     flex-direction: column;
     background-color: #36393f;
@@ -82,9 +94,16 @@
     margin-top: 1rem;
   }
 
-  /* Right column (activity feed placeholder) */
+  .chat-footer input {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: none;
+  }
+
+  /* Right column: activity feed placeholder */
   .activity-column {
-    width: 300px; /* or 33% if you want a third of the screen */
+    width: 300px; /* fixed width for right column */
     background-color: #2f3136;
     padding: 1rem;
     overflow-y: auto;
@@ -102,7 +121,7 @@
   <div class="friends-column">
     <h2>Friends</h2>
     <ul class="friend-list">
-      <!-- Hard-coded for now -->
+      <!-- Hard-coded friends for now -->
       <li onclick="openChat('Friend 1')">Friend 1</li>
       <li onclick="openChat('Friend 2')">Friend 2</li>
       <li onclick="openChat('Friend 3')">Friend 3</li>
@@ -112,6 +131,7 @@
   <!-- Center Column: Chat -->
   <div class="chat-column">
     <div class="chat-header">
+      <!-- In app.py, pass username to the template. Example: render_template("user_home.html", username=username) -->
       <h2>Welcome back, {{ username or 'User' }}!</h2>
     </div>
 
@@ -120,15 +140,11 @@
     </div>
 
     <div class="chat-footer">
-      <input 
-        type="text" 
-        placeholder="Type your message..." 
-        style="width: 100%; padding: 0.5rem; border-radius: 4px; border: none;"
-      >
+      <input type="text" placeholder="Type your message..." />
     </div>
   </div>
 
-  <!-- Right Column: Activity Feed Placeholder -->
+  <!-- Right Column: Activity Feed -->
   <div class="activity-column">
     <h2>Activity Feed</h2>
     <p>This area could show upcoming events, friend statuses, or other data.</p>
@@ -136,12 +152,12 @@
 </div>
 
 <script>
-  // Basic placeholder function to show switching chat content
+  // Basic placeholder function for switching chat content
   function openChat(friendName) {
     const chatContent = document.getElementById('chatContent');
     chatContent.innerHTML = `
       <p><strong>Chat with ${friendName}</strong></p>
-      <p>(Here you can load or display the chat messages with ${friendName}...)</p>
+      <p>(Here you can load or display chat messages with ${friendName}...)</p>
     `;
   }
 </script>

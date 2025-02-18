@@ -227,6 +227,13 @@ def check_email():
 
 @app.route("/new_user", methods=["GET", "POST"])
 def new_user():
+    # 1. Check if user is logged in
+    if "user_id" not in session:
+        flash("Please log in first.")
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+
     if request.method == "POST":
         # If the user clicks "Skip", redirect to user_home
         if "skip" in request.form:
@@ -244,11 +251,33 @@ def new_user():
 
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
+
+            # 2. Save the file in /static/profile_pics
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+
+            # 3. Build the path to store in DB (e.g. "static/profile_pics/filename.png")
+            db_file_path = os.path.join("static", "profile_pics", filename)
+
+            # 4. Update the user record with the file path
+            conn = get_db_connection()
+            if conn is None:
+                flash("Database connection error!")
+                return redirect(url_for("user_home"))
+
+            cursor = conn.cursor()
+            update_query = "UPDATE users SET profile_pic = %s WHERE id = %s"
+            cursor.execute(update_query, (db_file_path, user_id))
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            # 5. Redirect to user_home
+            flash("Profile picture uploaded successfully!")
             return redirect(url_for("user_home"))
         else:
             flash("Invalid file type! Allowed types: png, jpg, jpeg, gif.")
             return redirect(request.url)
+
     return render_template("new_user.html")
 
 
