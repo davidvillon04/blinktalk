@@ -290,8 +290,9 @@ def user_home():
     conn.close()
 
     username = row["username"] if row else "User"
+    profile_pic = row["profile_pic"] if row and row["profile_pic"] else None
 
-    return render_template("user_home.html", username=username)
+    return render_template("user_home.html", username=username, profile_pic=profile_pic)
 
 
 if __name__ == "__main__":
