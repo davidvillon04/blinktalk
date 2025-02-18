@@ -1,79 +1,133 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Create Account</title>
-  <!-- Font Awesome CDN for icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-pIVpS4F9Z9S4sF5HuyO1Yxx7mkTNZJxxV0oGxZ+S35gJKM6Eej+EJpDUPpZJpZJ4W7p6dXXm7ufmR4dY6zM8Ww==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <style>
-    /* Simple styling for the toggle button */
-    .toggle-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 1.2em;
-      vertical-align: middle;
-    }
-  </style>
-</head>
-<body>
-  <h1>Create Account</h1>
+{% extends "base.html" %}
 
-  <!-- Display flash messages -->
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <ul style="color: red;">
-        {% for message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
+{% block content %}
+<h1>Create Account</h1>
 
-  <form method="POST">
-    <!-- Username Input -->
-    <label for="username">UserName:</label><br>
-    <input type="text" id="username" name="username" required><br><br>
+<!-- Display flash messages -->
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for message in messages %}
+        <p>{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
 
-    <!-- Password Input with Toggle -->
-    <label for="password">Password:</label><br>
-    <input type="password" id="password" name="password" required>
-    <button type="button" class="toggle-btn" onclick="togglePassword('password', this)">
-      <i class="fa-solid fa-eye"></i>
-    </button>
-    <br><br>
-
-    <!-- Confirm Password Input with Toggle -->
-    <label for="confirm">Confirm Password:</label><br>
-    <input type="password" id="confirm" name="confirm" required>
-    <button type="button" class="toggle-btn" onclick="togglePassword('confirm', this)">
-      <i class="fa-solid fa-eye"></i>
-    </button>
-    <br><br>
-
-    <input type="submit" value="Create Account">
-  </form>
+<form method="POST" id="registerForm">
+  <!-- Username Input -->
+  <label for="username">UserName:</label>
+  <div>
+    <input type="text" id="username" name="username" required>
+    <div id="usernameHint" style="font-size:0.9em; margin-top: 4px; color: #ffaaaa; display: none;">
+      Username must be 2-32 characters long and can only contain letters, numbers, underscores (_) and periods (.).
+    </div>
+  </div>
   <br>
-  <p>Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
 
-  <script>
-    // Function to toggle the password visibility using Font Awesome icons
-    function togglePassword(inputId, btn) {
-      var inputField = document.getElementById(inputId);
-      var icon = btn.querySelector('i');
+  <!-- Password Input with Toggle and Strength Meter -->
+  <label for="password">Password:</label>
+  <div style="position: relative;">
+    <input type="password" id="password" name="password" required>
+    <button type="button"
+            style="position: absolute; right: 0.5rem; top: 0.5rem; background: none; border: none; cursor: pointer;"
+            onclick="togglePassword('password', this)">Show</button>
+  </div>
+  <!-- Password Strength Meter -->
+  <div id="passwordStrengthContainer" style="margin-top: 5px; display: none;">
+    <meter max="100" id="passwordMeter" value="0"></meter>
+    <div id="passwordStrengthText" style="font-size:0.9em; margin-top: 3px;"></div>
+  </div>
+  <br>
 
-      if (inputField.type === "password") {
-        inputField.type = "text";
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-      } else {
-        inputField.type = "password";
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-      }
+  <!-- Confirm Password Input with Toggle -->
+  <label for="confirm">Confirm Password:</label>
+  <div style="position: relative;">
+    <input type="password" id="confirm" name="confirm" required>
+    <button type="button"
+            style="position: absolute; right: 0.5rem; top: 0.5rem; background: none; border: none; cursor: pointer;"
+            onclick="togglePassword('confirm', this)">Show</button>
+  </div>
+
+  <br>
+  <input type="submit" value="Create Account">
+</form>
+
+<br>
+<p>Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
+
+<script>
+  // Username live validation
+  const usernameInput = document.getElementById('username');
+  const usernameHint = document.getElementById('usernameHint');
+  
+  usernameInput.addEventListener('focus', function() {
+    usernameHint.style.display = 'block';
+  });
+
+  usernameInput.addEventListener('input', function() {
+    const username = usernameInput.value;
+    const regex = /^[A-Za-z0-9_.]{2,32}$/;
+    if (regex.test(username)) {
+      usernameHint.style.color = '#aaffaa'; // Valid: green-ish
+    } else {
+      usernameHint.style.color = '#ffaaaa'; // Invalid: red-ish
     }
-  </script>
-</body>
-</html>
+  });
 
+  // Password strength meter
+  const passwordInput = document.getElementById('password');
+  const passwordMeter = document.getElementById('passwordMeter');
+  const passwordStrengthText = document.getElementById('passwordStrengthText');
+  const passwordStrengthContainer = document.getElementById('passwordStrengthContainer');
 
+  passwordInput.addEventListener('focus', function() {
+    passwordStrengthContainer.style.display = 'block';
+    // Set the meter's width equal to the password input's width:
+    passwordMeter.style.width = passwordInput.offsetWidth + "px";
+  });
+
+  passwordInput.addEventListener('input', function() {
+    const pwd = passwordInput.value;
+    let strength = 0;
+
+    // Basic strength checks:
+    if (pwd.length >= 6) strength += 20;
+    if (pwd.length >= 10) strength += 20;
+    if (/[A-Z]/.test(pwd)) strength += 20;
+    if (/[0-9]/.test(pwd)) strength += 20;
+    if (/[\W_]/.test(pwd)) strength += 20;
+
+    passwordMeter.value = strength;
+
+    let color;
+    if (strength < 40) {
+      passwordStrengthText.textContent = "Weak";
+      passwordStrengthText.style.color = "#ff4444";
+      color = "#ff4444";
+    } else if (strength < 80) {
+      passwordStrengthText.textContent = "Moderate";
+      passwordStrengthText.style.color = "#ffbb33";
+      color = "#ffbb33";
+    } else {
+      passwordStrengthText.textContent = "Strong";
+      passwordStrengthText.style.color = "#00C851";
+      color = "#00C851";
+    }
+    // Set the CSS custom property for the meter's progress bar color.
+    passwordMeter.style.setProperty('--strength-color', color);
+  });
+
+  // Toggle password visibility with text button
+  function togglePassword(inputId, btn) {
+    const inputField = document.getElementById(inputId);
+    if (inputField.type === "password") {
+      inputField.type = "text";
+      btn.textContent = "Hide";
+    } else {
+      inputField.type = "password";
+      btn.textContent = "Show";
+    }
+  }
+</script>
+{% endblock %}

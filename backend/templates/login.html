@@ -1,33 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Sign In</title>
-</head>
-<body>
-    <h1>Sign In</h1>
+{% extends "base.html" %}
 
-    <!-- Display flash messages -->
-    {% with messages = get_flashed_messages() %}
-      {% if messages %}
-        <ul style="color: red;">
-          {% for message in messages %}
-            <li>{{ message }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endwith %}
+{% block content %}
+<h1>Sign In</h1>
 
-    <form method="POST">
-        <label for="username">UserName:</label><br>
-        <input type="text" id="username" name="username" required><br><br>
+<!-- Display flash messages -->
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for message in messages %}
+        <p>{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
 
-        <label for="password">Password:</label><br>
-        <input type="password" id="password" name="password" required><br><br>
+<form method="POST">
+  <label for="username">UserName:</label>
+  <input type="text" id="username" name="username" required>
 
-        <input type="submit" value="Sign In">
-    </form>
-    <br>
-    <p>Don't have an account? <a href="{{ url_for('register') }}">Create Account</a></p>
-</body>
-</html>
+  <label for="password">Password:</label>
+  <div style="position: relative;">
+    <input type="password" id="password" name="password" required>
+    <button type="button"
+            style="position: absolute; right: 0.5rem; top: 0.5rem; background: none; border: none; cursor: pointer;"
+            onclick="togglePassword('password', this)">Show</button>
+  </div>
+
+  <input type="submit" value="Sign In">
+</form>
+
+<br>
+<p>Don't have an account? <a href="{{ url_for('register') }}">Create Account</a></p>
+
+<script>
+  // Same toggle function
+  function togglePassword(inputId, btn) {
+    const inputField = document.getElementById(inputId);
+    if (inputField.type === "password") {
+      inputField.type = "text";
+      btn.textContent = "Hide";
+    } else {
+      inputField.type = "password";
+      btn.textContent = "Show";
+    }
+  }
+</script>
+{% endblock %}
