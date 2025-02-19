@@ -96,20 +96,27 @@ function selectUsername(username) {
  **************************************/
 function sendFriendRequest() {
    const friendName = document.getElementById("addFriendInput").value.trim();
+   const errorDiv = document.getElementById("addFriendError");
+
+   // Clear any old error text
+   errorDiv.textContent = "";
+
+   // Basic validation
    if (!friendName) {
-      alert("Please enter a username to send a friend request.");
+      errorDiv.textContent = "Please enter a username to send a friend request.";
       return;
    }
 
-   // Make sure the user can't add themselves
+   // Check if user is adding themselves (client-side check)
    if (
       typeof CURRENT_USERNAME !== "undefined" &&
       friendName.toLowerCase() === CURRENT_USERNAME.toLowerCase()
    ) {
-      alert("You can't add yourself!");
+      errorDiv.textContent = "You cannot add yourself!";
       return;
    }
 
+   // Send AJAX request to the backend
    fetch("/send_friend_request", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -117,19 +124,33 @@ function sendFriendRequest() {
    })
       .then((response) => response.json())
       .then((data) => {
+         // If there's an error from the server, display it above the text box
+         if (data.error) {
+            errorDiv.textContent = data.error;
+            return;
+         }
+         // Otherwise, success
          if (data.success) {
-            alert("Friend request sent to: " + friendName);
+            // Optionally show a success message inline in green, or do an alert
+            // For example:
+            errorDiv.style.color = "green";
+            errorDiv.textContent = "Friend request sent to: " + friendName;
+
             // Optionally reset the input
             document.getElementById("addFriendInput").value = "";
             document.getElementById("autocompleteDropdown").innerHTML = "";
             document.getElementById("autocompleteDropdown").style.display = "none";
-         } else {
-            alert("Error: " + data.error);
+
+            // Reset color to red for future errors
+            setTimeout(() => {
+               errorDiv.textContent = "";
+               errorDiv.style.color = "red";
+            }, 3000);
          }
       })
       .catch((error) => {
          console.error("Error sending friend request:", error);
-         alert("Error sending friend request.");
+         errorDiv.textContent = "An error occurred. Please try again.";
       });
 }
 
