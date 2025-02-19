@@ -419,6 +419,12 @@ function openChat(friendId, friendName) {
          chatMessagesDiv.innerHTML = html;
          // Scroll to bottom
          chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+
+         // Now the input definitely exists:
+         const inputEl = document.getElementById("chatInputField");
+         if (inputEl) {
+            inputEl.focus();
+         }
       })
       .catch((err) => {
          console.error("Error loading messages:", err);
@@ -467,6 +473,14 @@ function sendChatMessage() {
       })
       .catch((err) => {
          console.error("Error in sendChatMessage:", err);
+      })
+
+      .finally(() => {
+         // AFTER it’s done, re-focus the input
+         const refocusInput = document.getElementById("chatInputField");
+         if (refocusInput) {
+            refocusInput.focus();
+         }
       });
 }
 
