@@ -622,7 +622,7 @@ def get_messages():
             m.receiver_id,
             m.content,
             m.created_at,
-            sender.username AS sender_username.
+            sender.username AS sender_username,
             sender.profile_pic AS sender_profile_pic
         FROM messages m
         JOIN users sender ON sender.id = m.sender_id

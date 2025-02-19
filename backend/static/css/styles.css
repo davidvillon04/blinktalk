@@ -436,10 +436,13 @@ meter::-moz-meter-bar {
     margin-bottom: 1rem;
 }
 .chat-footer {
-    margin-top: 1rem;
+    flex-shrink: 0;        /* don’t let it shrink */
+    display: flex;         /* so the input + button can line up, if you like */
+    gap: 0.5rem;           /* space between input and button */
+    margin-top: 1rem;      /* or remove if you want no gap above */
 }
 .chat-footer input {
-    width: 100%;
+    flex: 1;
     padding: 0.5rem;
     border-radius: 4px;
     border: none;

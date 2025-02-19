@@ -51,12 +51,27 @@
    </div>
 
    <!-- Center Column: Chat or Requests UI -->
-   <div class="chat-column" id="mainContent">
-      <div class="chat-header">
-         <h2>Welcome back, {{ username or 'User' }}!</h2>
+   <div class="chat-column">
+      <!-- Chat header always here, at top -->
+      <div class="chat-header" id="chatHeader">
+         <!-- We'll fill this dynamically with openChat() -->
+         <h2>Welcome!</h2>
       </div>
-      <div id="chatContent" class="chat-content">
-         <p>Select a friend from the list to start chatting!</p>
+
+      <!-- The main messages area, flex: 1, scrollable -->
+      <div class="chat-content" id="chatMessages">
+         <p>Select a friend to start chatting!</p>
+      </div>
+
+      <!-- The footer with the text box pinned at the bottom -->
+      <div class="chat-footer" id="chatFooter">
+         <input
+            type="text"
+            id="chatInputField"
+            placeholder="Type your message..."
+            onkeydown="handleChatKeyDown(event)"
+         />
+         <button onclick="sendChatMessage()">Send</button>
       </div>
    </div>
 
