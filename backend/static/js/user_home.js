@@ -394,15 +394,26 @@ function openChat(friendId, friendName) {
          data.messages.forEach((msg) => {
             const who = msg.sender_id === CURRENT_USER_ID ? "You" : msg.sender_username;
             const pic = msg.sender_profile_pic || "/static/profile_pics/default.png";
+
+            // Set the date
+            const rawTimestamp = msg.created_at; // e.g. "2023-03-21 19:15:00"
+            const dateObj = new Date(rawTimestamp.replace(" ", "T")); // "2023-03-21T19:15:00"
+
+            // Format the time to 12-hour local time
+            const timeOptions = {
+               hour: "2-digit",
+               minute: "2-digit",
+               hour12: true,
+            };
+            // e.g. "7:15 PM"
+            const localTimeString = dateObj.toLocaleTimeString([], timeOptions);
+
             html += `
            <div class="chat-message" style="display:flex; margin-bottom:0.5rem;">
-             <img
-               src="${pic}"
-               style="width:32px; height:32px; border-radius:50%; margin-right:8px;"
-             />
+             <img src="${pic}" style="width:32px; height:32px; border-radius:50%; margin-right:8px;"/>
              <div>
                <strong>${who}:</strong> ${msg.content}
-               <div style="font-size:0.8rem; color:#999;">${msg.created_at}</div>
+               <div style="font-size:0.8rem; color:#999;">${localTimeString}</div>
              </div>
            </div>
          `;
@@ -476,4 +487,68 @@ function updateRequestCount() {
       .catch((err) => {
          console.error("Error updating request count:", err);
       });
+}
+
+/**************************************
+ * Format a raw MySQL timestamp like "2025-01-12 21:13:00"
+ * into either:
+ *   - "Today at 9:13 PM"
+ *   - "Yesterday at 6:27 AM"
+ *   - "1/12/2025 9:13 PM"
+ **************************************/
+function formatMessageTimestamp(rawTimestamp) {
+   // 1) Parse the "YYYY-MM-DD HH:MM:SS" string into a JS Date.
+   //    We insert a "T" to form an ISO-like string: "YYYY-MM-DDTHH:MM:SS"
+   //    Also handle if there's no seconds, etc. But typically MySQL includes them.
+   const dateObj = new Date(rawTimestamp.replace(" ", "T"));
+
+   // If this fails for some reason, you'll get "Invalid Date". You can gracefully return something:
+   if (isNaN(dateObj)) {
+      return "Invalid Date";
+   }
+
+   // 2) Figure out if it's "today", "yesterday", or older
+   //    We compare year/month/day with the local "now".
+   const now = new Date();
+
+   // We'll zero-out the time portion so we can compare just dates
+   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+   const msgDate = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+
+   // difference in days (millisecond difference / 86_400_000)
+   const diffTime = today - msgDate;
+   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+   // 3) Build a 12-hour clock time for the message's time portion
+   //    e.g. "3:32 PM"
+   const timeOptions = {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+   };
+   const timeString = dateObj.toLocaleTimeString([], timeOptions);
+
+   // 4) Decide which prefix to use:
+   //    If diffDays === 0 => "Today at HH:MM"
+   //    If diffDays === 1 => "Yesterday at HH:MM"
+   //    Else => "M/D/YYYY HH:MM"
+   if (diffDays === 0) {
+      // same local date as now
+      return `Today at ${timeString}`;
+   } else if (diffDays === 86400000 / (1000 * 60 * 60 * 24)) {
+      // If you want to precisely check 1 day difference, you'd do diffDays == 1
+      // But because we're doing date difference by day (not ms?), if diffDays===1 => "yesterday"
+      return `Yesterday at ${timeString}`;
+   } else if (diffDays === 1) {
+      // More typical: if diffDays == 1 => yesterday
+      return `Yesterday at ${timeString}`;
+   } else {
+      // It's older
+      // Format M/D/YYYY
+      const m = dateObj.getMonth() + 1; // getMonth() is 0-based
+      const d = dateObj.getDate();
+      const y = dateObj.getFullYear();
+
+      return `${m}/${d}/${y} ${timeString}`;
+   }
 }

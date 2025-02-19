@@ -617,11 +617,7 @@ def get_messages():
     # 4. Fetch all messages between current_user and friend, sorted by created_at ascending
     sql = """
         SELECT
-            m.id,
-            m.sender_id,
-            m.receiver_id,
-            m.content,
-            m.created_at,
+            m.id, m.sender_id, m.receiver_id, m.content, m.created_at,
             sender.username AS sender_username,
             sender.profile_pic AS sender_profile_pic
         FROM messages m
