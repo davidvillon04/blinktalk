@@ -324,11 +324,13 @@ def get_friend_requests():
 def accept_request():
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
+
     request_id = request.form.get("request_id")
     user_id = session["user_id"]
 
     conn = get_db_connection()
     cursor = conn.cursor()
+
     cursor.execute(
         "UPDATE friend_requests SET status = 'accepted' WHERE id = %s AND receiver_id = %s",
         (request_id, user_id),

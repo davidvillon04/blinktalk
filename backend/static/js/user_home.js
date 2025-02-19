@@ -26,23 +26,15 @@ function openAddFriend() {
 // This function retrieves friend requests and displays them.
 function openRequests() {
    // In production, use fetch() to call your backend:
-   /*
-    fetch("/get_friend_requests")
-      .then(response => response.json())
-      .then(data => {
-        buildRequestsUI(data);
+
+   fetch("/get_friend_requests")
+      .then((response) => response.json())
+      .then((data) => {
+         buildRequestsUI(data);
       })
-      .catch(error => {
-        console.error("Error fetching friend requests:", error);
+      .catch((error) => {
+         console.error("Error fetching friend requests:", error);
       });
-    */
-   // For now, we simulate pending requests:
-   const simulatedRequests = [
-      { id: 1, username: "Alice" },
-      { id: 2, username: "Flamer" },
-      { id: 3, username: "Zoe" },
-   ];
-   buildRequestsUI(simulatedRequests);
 }
 
 // This function builds the HTML for the Requests view.
