@@ -372,12 +372,16 @@ function openChat(friendId, friendName) {
 }
 
 // 2. Function to send a message using /send_message
-function sendChatMessage(friendId, friendName) {
+function sendChatMessage() {
    const inputField = document.getElementById("chatInputField");
    if (!inputField) return;
 
    const messageText = inputField.value.trim();
    if (!messageText) return;
+
+   // We stored friend info when we last opened a chat
+   const friendId = window.currentChatFriendId;
+   const friendName = window.currentChatFriendName;
 
    fetch("/send_message", {
       method: "POST",
@@ -393,10 +397,11 @@ function sendChatMessage(friendId, friendName) {
             console.error("Error sending message:", data.error);
             return;
          }
-         // Message was sent successfully
-         inputField.value = ""; // Clear the input field
-
+         // success => clear input, reload messages
+         inputField.value = "";
+         // fetch the updated conversation
          openChat(friendId, friendName);
+         // optionally reorder friend list
          updateFriendList();
       })
       .catch((err) => {
