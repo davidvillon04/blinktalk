@@ -366,6 +366,17 @@ function openChat(friendId, friendName) {
    const chatMessagesDiv = document.getElementById("chatMessages");
    chatMessagesDiv.innerHTML = "Loading messages...";
 
+   const chatFooter = document.getElementById("chatFooter");
+   chatFooter.innerHTML = `
+      <input
+         type="text"
+         id="chatInputField"
+         placeholder="Type your message..."
+         onkeydown="handleChatKeyDown(event)"
+      />
+      <button onclick="sendChatMessage()">Send</button>
+   `;
+
    // 3) Store these globally so sendChatMessage() knows whom to message
    window.currentChatFriendId = friendId;
    window.currentChatFriendName = friendName;
