@@ -324,71 +324,50 @@ function updateFriendList() {
  * 7. Open a chat with a friend
  **************************************/
 function openChat(friendId, friendName) {
-   // The chat-content area in the center column
-   const chatContent = document.getElementById("chatContent");
-   if (!chatContent) return;
+   // 1) Set the header
+   const chatHeader = document.getElementById("chatHeader");
+   chatHeader.innerHTML = `<h2>Chat with ${friendName}</h2>`;
 
-   // Build some basic HTML structure:
-   chatContent.innerHTML = `
-     <div class="chat-header">
-       <h2>Chat with ${friendName}</h2>
-     </div>
-     <div class="chat-messages" id="chatMessages" style="max-height: 300px; overflow-y: auto; border: 1px solid #aaa; margin-bottom: 1rem; padding: 0.5rem;">
-       Loading messages...
-     </div>
-     <div class="chat-input">
-       <input type="text" id="chatInputField" placeholder="Type your message..." style="width: 70%;" />
-       <button onclick="sendChatMessage(${friendId}, '${friendName}')">Send</button>
-     </div>
-   `;
+   // 2) Show "Loading..." in the messages area
+   const chatMessagesDiv = document.getElementById("chatMessages");
+   chatMessagesDiv.innerHTML = "Loading messages...";
 
-   // 2. Fetch existing messages from /get_messages
+   // 3) Store these globally so sendChatMessage() knows whom to message
+   window.currentChatFriendId = friendId;
+   window.currentChatFriendName = friendName;
+
+   // 4) Fetch existing messages
    fetch(`/get_messages?friend_id=${friendId}`)
       .then((res) => res.json())
       .then((data) => {
          if (data.error) {
-            console.error("Error fetching messages:", data.error);
-            const chatMessagesDiv = document.getElementById("chatMessages");
-            if (chatMessagesDiv) {
-               chatMessagesDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
-            }
+            chatMessagesDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
             return;
          }
-         if (!data.messages) return;
-
-         // 3. Render messages in the chat area
-         const chatMessagesDiv = document.getElementById("chatMessages");
-         if (!chatMessagesDiv) return;
-
+         // Build message HTML
          let html = "";
          data.messages.forEach((msg) => {
             const who = msg.sender_id === CURRENT_USER_ID ? "You" : msg.sender_username;
-            const profilePic = msg.sender_profile_pic || "/static/profile_pics/default.png";
-
+            const pic = msg.sender_profile_pic || "/static/profile_pics/default.png";
             html += `
-               <div class="chat-message" style="display: flex; margin-bottom: 0.5rem; align-items: center;">
-                  <!-- Avatar on the left -->
-                  <img
-                     src="${profilePic}"
-                     alt="Avatar"
-                     style="width: 32px; height: 32px; border-radius: 50%; margin-right: 8px;"
-                  />
-
-                  <!-- Message text & timestamp -->
-                  <div>
-                     <strong>${who}:</strong> ${msg.content}
-                     <div style="font-size:0.8rem; color:#999;">${msg.created_at}</div>
-                  </div>
-               </div>
-            `;
+           <div class="chat-message" style="display:flex; margin-bottom:0.5rem;">
+             <img
+               src="${pic}"
+               style="width:32px; height:32px; border-radius:50%; margin-right:8px;"
+             />
+             <div>
+               <strong>${who}:</strong> ${msg.content}
+               <div style="font-size:0.8rem; color:#999;">${msg.created_at}</div>
+             </div>
+           </div>
+         `;
          });
          chatMessagesDiv.innerHTML = html;
-
          // Scroll to bottom
          chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
       })
       .catch((err) => {
-         console.error("Error in fetch get_messages:", err);
+         console.error("Error loading messages:", err);
       });
 }
 
