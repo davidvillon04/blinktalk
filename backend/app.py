@@ -121,8 +121,14 @@ def register():
         cursor.execute(insert_query, (lowercase_username, password, email, dob))
         conn.commit()
 
+        # The newly inserted row ID is:
+        new_user_id = cursor.lastrowid
+
         cursor.close()
         conn.close()
+
+        # Put the new user into session
+        session["user_id"] = new_user_id
 
         return redirect(url_for("new_user"))
 
