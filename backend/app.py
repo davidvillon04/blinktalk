@@ -362,7 +362,10 @@ def accept_request():
         user1 = min(user_id, sender_id)
         user2 = max(user_id, sender_id)
         cursor.execute(
-            "INSERT INTO friendships (user1_id, user2_id) VALUES (%s, %s)",
+            """
+            INSERT INTO friendships (user1_id, user2_id, last_interaction)
+            VALUES (%s, %s, NOW())
+            """,
             (user1, user2),
         )
         conn.commit()
@@ -502,6 +505,36 @@ def search_users():
     # Return only the usernames
     results = [row["username"] for row in rows]
     return jsonify({"results": results})
+
+
+@app.route("/get_friends", methods=["GET"])
+def get_friends():
+    """Return the updated friend list as JSON."""
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+    user_id = session["user_id"]
+
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "Database connection error"}), 500
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT u.id, u.username, u.profile_pic
+        FROM friendships f
+        JOIN users u ON (u.id = f.user1_id OR u.id = f.user2_id)
+        WHERE (f.user1_id = %s OR f.user2_id = %s)
+          AND u.id != %s
+        ORDER BY u.username ASC
+        """,
+        (user_id, user_id, user_id),
+    )
+    friends = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return jsonify({"friends": friends})
 
 
 if __name__ == "__main__":

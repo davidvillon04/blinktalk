@@ -25,6 +25,12 @@ function openAddFriend() {
            <button class="add-friend-button" onclick="sendFriendRequest()">
              Send Request
            </button>
+
+           <div
+            id="autocompleteDropdown"
+            class="autocomplete-dropdown"
+            style="display: none;"
+            ></div>
          </div>
  
          <div

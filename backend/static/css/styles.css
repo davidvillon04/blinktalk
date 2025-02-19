@@ -478,13 +478,13 @@ meter::-moz-meter-bar {
     margin-bottom: 1rem;
 }
 .add-friend-box p {
-    margin-bottom: 2rem;
+    margin-bottom: 0.1rem;
     color: #aaa;
 }
 
 .add-friend-error {
     color: red;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
   }
   
 .add-friend-input {
@@ -501,7 +501,7 @@ meter::-moz-meter-bar {
 }
 .autocomplete-dropdown {
     position: absolute;
-    top: 38px;
+    top: 100%;
     left: 0;
     right: 0;
     background-color: rgba(47, 49, 54, 0.9);
