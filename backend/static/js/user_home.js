@@ -296,3 +296,27 @@ function openChat(friendName) {
      <p>(Here you can load or display chat messages with ${friendName}...)</p>
    `;
 }
+
+/**************************************
+ * UPDATE REQUEST COUNT BADGE
+ **************************************/
+function updateRequestCount() {
+   fetch("/get_friend_requests")
+      .then((response) => response.json())
+      .then((data) => {
+         // If "data.error", user not logged in, etc. => handle gracefully
+         if (data.error) {
+            console.error("Error fetching request count:", data.error);
+            return;
+         }
+         // 'data' should be an array of pending requests; just use length:
+         const count = data.length;
+         const requestCountSpan = document.getElementById("requestCount");
+         if (requestCountSpan) {
+            requestCountSpan.textContent = count; // update the badge
+         }
+      })
+      .catch((err) => {
+         console.error("Error updating request count:", err);
+      });
+}
