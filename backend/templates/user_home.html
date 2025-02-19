@@ -13,6 +13,7 @@
          <i class="fa-solid fa-plus" title="Add Friend" onclick="openAddFriend()"></i>
       </div>
 
+      <!-- FRIEND LIST - Will be replaced/updated via JS -->
       <ul class="friend-list">
          {% for friend in friends %}
          <li onclick="openChat('{{ friend.username }}')">
