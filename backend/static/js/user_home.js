@@ -125,8 +125,26 @@ function sendFriendRequest() {
       alert("Please enter a username to send a friend request.");
       return;
    }
-   // In production, perform an AJAX POST to send the friend request to your backend.
-   alert(`Friend request sent to: ${friendName}`);
+   fetch("/send_friend_request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ friend_username: friendName }),
+   })
+      .then((response) => response.json())
+      .then((data) => {
+         if (data.success) {
+            alert("Friend request sent to: " + friendName);
+            // Optionally, you can clear the input or close the Add Friend UI:
+            document.getElementById("addFriendInput").value = "";
+            document.getElementById("autocompleteDropdown").style.display = "none";
+         } else {
+            alert("Error: " + data.error);
+         }
+      })
+      .catch((error) => {
+         console.error("Error sending friend request:", error);
+         alert("Error sending friend request.");
+      });
 }
 
 /**************************************
