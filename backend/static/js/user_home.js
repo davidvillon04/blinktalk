@@ -181,9 +181,6 @@ function buildRequestsUI(requests) {
    document.getElementById("mainContent").innerHTML = html;
 }
 
-/**************************************
- * 5. Accept or Decline Requests + Update Friend List
- **************************************/
 function acceptRequestAjax(requestId, btn) {
    const formData = new FormData();
    formData.append("request_id", requestId);
@@ -200,16 +197,19 @@ function acceptRequestAjax(requestId, btn) {
       })
       .then((data) => {
          if (data.success) {
-            // Visually remove the request item
+            // Fade out the request item visually
             const requestItem = btn.closest(".request-item");
             requestItem.style.transition = "opacity 0.5s";
             requestItem.style.opacity = 0;
             setTimeout(() => {
                requestItem.remove();
-               updateFriendList(); // Refresh side friend list
+               // Update the friend list
+               updateFriendList();
+               // Update the requests badge
+               updateRequestCount();
             }, 500);
          } else {
-            console.error("Error:", data.error);
+            console.error("Accept request error:", data.error);
          }
       })
       .catch((error) => {
@@ -233,15 +233,17 @@ function declineRequestAjax(requestId, btn) {
       })
       .then((data) => {
          if (data.success) {
-            // Fade away the request item
+            // Fade out the request item
             const requestItem = btn.closest(".request-item");
             requestItem.style.transition = "opacity 0.5s";
             requestItem.style.opacity = 0;
             setTimeout(() => {
                requestItem.remove();
+               // Update the badge again
+               updateRequestCount();
             }, 500);
          } else {
-            console.error("Error:", data.error);
+            console.error("Decline request error:", data.error);
          }
       })
       .catch((error) => {
