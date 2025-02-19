@@ -57,22 +57,16 @@ function buildRequestsUI(requests) {
       requests.sort((a, b) => a.username.localeCompare(b.username));
       requests.forEach((req) => {
          html += `
-          <div class="request-item">
-            <span>${req.username}</span>
-            <form method="POST" action="/accept_request" style="display:inline">
-              <input type="hidden" name="request_id" value="${req.id}">
-              <button type="submit" class="accept-btn">
-                <i class="fa fa-check" style="color: green;"></i>
-              </button>
-            </form>
-            <form method="POST" action="/decline_request" style="display:inline">
-              <input type="hidden" name="request_id" value="${req.id}">
-              <button type="submit" class="decline-btn">
-                <i class="fa fa-times" style="color: red;"></i>
-              </button>
-            </form>
-          </div>
-        `;
+         <div class="request-item" data-request-id="${req.id}">
+           <span>${req.username}</span>
+           <button type="button" class="accept-btn" onclick="acceptRequestAjax(${req.id}, this)">
+             <i class="fa fa-check" style="color: green;"></i>
+           </button>
+           <button type="button" class="decline-btn" onclick="declineRequestAjax(${req.id}, this)">
+             <i class="fa fa-times" style="color: red;"></i>
+           </button>
+         </div>
+       `;
       });
    }
    html += "</div>";
@@ -153,4 +147,57 @@ function openChat(friendName) {
         <p><strong>Chat with ${friendName}</strong></p>
         <p>(Here you can load or display chat messages with ${friendName}...)</p>
       `;
+}
+
+// Function to accept a friend request via AJAX and fade the request item away
+function acceptRequestAjax(requestId, btn) {
+   const formData = new FormData();
+   formData.append("request_id", requestId);
+
+   fetch("/accept_request", {
+      method: "POST",
+      body: formData,
+   })
+      .then((response) => {
+         if (response.ok) {
+            // Find the request item element and fade it out
+            const requestItem = btn.closest(".request-item");
+            requestItem.style.transition = "opacity 0.5s";
+            requestItem.style.opacity = 0;
+            setTimeout(() => {
+               requestItem.remove();
+            }, 500);
+         } else {
+            console.error("Accept request failed.");
+         }
+      })
+      .catch((error) => {
+         console.error("Error accepting request:", error);
+      });
+}
+
+// Function to decline a friend request via AJAX and fade the request item away
+function declineRequestAjax(requestId, btn) {
+   const formData = new FormData();
+   formData.append("request_id", requestId);
+
+   fetch("/decline_request", {
+      method: "POST",
+      body: formData,
+   })
+      .then((response) => {
+         if (response.ok) {
+            const requestItem = btn.closest(".request-item");
+            requestItem.style.transition = "opacity 0.5s";
+            requestItem.style.opacity = 0;
+            setTimeout(() => {
+               requestItem.remove();
+            }, 500);
+         } else {
+            console.error("Decline request failed.");
+         }
+      })
+      .catch((error) => {
+         console.error("Error declining request:", error);
+      });
 }
