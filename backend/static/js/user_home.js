@@ -4,17 +4,25 @@
  * 1. Open Add Friend UI
  **************************************/
 function openAddFriend() {
-   const mainContent = document.getElementById("mainContent");
-   mainContent.innerHTML = `
+   // 1) Set the chat header
+   const chatHeader = document.getElementById("chatHeader");
+   chatHeader.innerHTML = "<h2>Add Friend</h2>";
+
+   // 2) Clear #chatMessages
+   const chatMessagesDiv = document.getElementById("chatMessages");
+   chatMessagesDiv.innerHTML = "";
+
+   // 3) Optionally remove or hide the footer
+   const chatFooter = document.getElementById("chatFooter");
+   chatFooter.innerHTML = "";
+
+   // 4) Now build the add friend UI
+   let html = `
      <div class="add-friend-container">
        <div class="add-friend-box">
          <h2>Add Friend</h2>
          <p>You can add friends by their username.</p>
- 
-         <!-- The error div, centered above the input -->
          <div id="addFriendError" class="add-friend-error"></div>
- 
-         <!-- The input + button side by side -->
          <div class="add-friend-input">
            <input
              type="text"
@@ -25,22 +33,17 @@ function openAddFriend() {
            <button class="add-friend-button" onclick="sendFriendRequest()">
              Send Request
            </button>
-
            <div
-            id="autocompleteDropdown"
-            class="autocomplete-dropdown"
-            style="display: none;"
-            ></div>
+             id="autocompleteDropdown"
+             class="autocomplete-dropdown"
+             style="display: none;"
+           ></div>
          </div>
- 
-         <div
-           id="autocompleteDropdown"
-           class="autocomplete-dropdown"
-           style="display: none;"
-         ></div>
        </div>
      </div>
    `;
+   // Put it into #chatMessages
+   chatMessagesDiv.innerHTML = html;
 }
 
 /**************************************
@@ -167,7 +170,7 @@ function sendFriendRequest() {
 function openRequests() {
    // 1) Clear or change the header
    const chatHeader = document.getElementById("chatHeader");
-   chatHeader.innerHTML = "<h2>Requests</h2>";
+   chatHeader.innerHTML = "<h2>Pending Friend Requests</h2>";
 
    // 2) Clear the messages area or show "Loading..."
    const chatMessagesDiv = document.getElementById("chatMessages");
@@ -195,8 +198,13 @@ function openRequests() {
 }
 
 function buildRequestsUI(requests) {
-   let html = '<div class="requests-container">';
-   html += "<h2>Friend Requests</h2>";
+   const chatMessagesDiv = document.getElementById("chatMessages");
+   if (!chatMessagesDiv) return;
+
+   let html = "<div class='requests-container'>";
+   // We might not want an <h2> here if we already set #chatHeader
+   // but if you do, that's fine:
+   // html += "<h2>Friend Requests</h2>";
 
    if (requests.length === 0) {
       html += "<p>No pending friend requests.</p>";
@@ -226,6 +234,7 @@ function buildRequestsUI(requests) {
       });
    }
    html += "</div>";
+   chatMessagesDiv.innerHTML = html;
 }
 
 function acceptRequestAjax(requestId, btn) {
