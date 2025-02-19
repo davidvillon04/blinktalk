@@ -334,36 +334,31 @@ def accept_request():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Update friend request status to 'accepted'
+
+    # Update the friend request to accepted
     cursor.execute(
-        """
-        UPDATE friend_requests 
-        SET status = 'accepted'
-        WHERE id = %s AND receiver_id = %s
-    """,
+        "UPDATE friend_requests SET status = 'accepted' WHERE id = %s AND receiver_id = %s",
         (request_id, user_id),
     )
     conn.commit()
 
-    # Retrieve the sender's ID for the accepted request
+    # Retrieve the sender's id
     cursor.execute("SELECT sender_id FROM friend_requests WHERE id = %s", (request_id,))
     row = cursor.fetchone()
     if row:
         sender_id = row[0]
-        # Insert a new row into the friendships table
-        # Ensure a consistent order for the user IDs
+        # Insert into friendships table (ensure the smaller id comes first)
         user1 = min(user_id, sender_id)
         user2 = max(user_id, sender_id)
         cursor.execute(
-            """
-            INSERT INTO friendships (user1_id, user2_id) VALUES (%s, %s)
-        """,
+            "INSERT INTO friendships (user1_id, user2_id) VALUES (%s, %s)",
             (user1, user2),
         )
         conn.commit()
 
     cursor.close()
     conn.close()
+
     flash("Friend request accepted!")
     return redirect(url_for("user_home"))
 
