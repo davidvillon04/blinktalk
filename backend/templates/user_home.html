@@ -1,4 +1,10 @@
 {% extends "base.html" %} {% block content %}
+
+<!-- Make the current username accessible in JS -->
+<script>
+   const CURRENT_USERNAME = "{{ username|safe }}";
+</script>
+
 <div class="app-container">
    <!-- Left Column: Requests, Friends List & User Profile -->
    <div class="friends-column">
@@ -13,7 +19,6 @@
          <i class="fa-solid fa-plus" title="Add Friend" onclick="openAddFriend()"></i>
       </div>
 
-      <!-- FRIEND LIST - Will be replaced/updated via JS -->
       <ul class="friend-list">
          {% for friend in friends %}
          <li onclick="openChat('{{ friend.username }}')">
@@ -47,7 +52,6 @@
 
    <!-- Center Column: Chat or Requests UI -->
    <div class="chat-column" id="mainContent">
-      <!-- Default Chat UI -->
       <div class="chat-header">
          <h2>Welcome back, {{ username or 'User' }}!</h2>
       </div>

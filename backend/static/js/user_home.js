@@ -11,9 +11,20 @@ function openAddFriend() {
          <h2>Add Friend</h2>
          <p>You can add friends by their username.</p>
          <div class="add-friend-input">
-           <input type="text" id="addFriendInput" placeholder="Enter a username..." oninput="onFriendSearchInput()">
-           <button class="add-friend-button" onclick="sendFriendRequest()">Send Request</button>
-           <div id="autocompleteDropdown" class="autocomplete-dropdown" style="display: none;"></div>
+           <input
+             type="text"
+             id="addFriendInput"
+             placeholder="Enter a username..."
+             oninput="onFriendSearchInput()"
+           />
+           <button class="add-friend-button" onclick="sendFriendRequest()">
+             Send Request
+           </button>
+           <div
+             id="autocompleteDropdown"
+             class="autocomplete-dropdown"
+             style="display: none;"
+           ></div>
          </div>
        </div>
      </div>
@@ -21,7 +32,104 @@ function openAddFriend() {
 }
 
 /**************************************
- * 2. Open Requests UI (fetch pending friend requests)
+ * 2. Searching users in the database (live dropdown)
+ **************************************/
+function onFriendSearchInput() {
+   const inputVal = document.getElementById("addFriendInput").value.trim();
+   const dropdown = document.getElementById("autocompleteDropdown");
+
+   // If no input, hide dropdown
+   if (!inputVal) {
+      dropdown.style.display = "none";
+      dropdown.innerHTML = "";
+      return;
+   }
+
+   // Fetch matching users from the server
+   fetchMatchingUsers(inputVal).then((matchingUsers) => {
+      if (matchingUsers.length === 0) {
+         // If empty, show a "not found" message
+         dropdown.innerHTML = `<div class="no-user">User was not found. Try again</div>`;
+         dropdown.style.display = "block";
+         return;
+      }
+
+      // Build dropdown items
+      let html = "";
+      matchingUsers.forEach((username) => {
+         html += `<div class="autocomplete-item" onclick="selectUsername('${username}')">${username}</div>`;
+      });
+      dropdown.innerHTML = html;
+      dropdown.style.display = "block";
+   });
+}
+
+function fetchMatchingUsers(query) {
+   // Return a Promise that resolves to an array of usernames
+   return fetch("/search_users?query=" + encodeURIComponent(query))
+      .then((res) => res.json())
+      .then((data) => {
+         if (data.error) {
+            console.error("Error searching users:", data.error);
+            return [];
+         }
+         return data.results || [];
+      })
+      .catch((err) => {
+         console.error("Error fetching users:", err);
+         return [];
+      });
+}
+
+function selectUsername(username) {
+   document.getElementById("addFriendInput").value = username;
+   document.getElementById("autocompleteDropdown").style.display = "none";
+}
+
+/**************************************
+ * 3. Send Friend Request
+ **************************************/
+function sendFriendRequest() {
+   const friendName = document.getElementById("addFriendInput").value.trim();
+   if (!friendName) {
+      alert("Please enter a username to send a friend request.");
+      return;
+   }
+
+   // Make sure the user can't add themselves
+   if (
+      typeof CURRENT_USERNAME !== "undefined" &&
+      friendName.toLowerCase() === CURRENT_USERNAME.toLowerCase()
+   ) {
+      alert("You can't add yourself!");
+      return;
+   }
+
+   fetch("/send_friend_request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ friend_username: friendName }),
+   })
+      .then((response) => response.json())
+      .then((data) => {
+         if (data.success) {
+            alert("Friend request sent to: " + friendName);
+            // Optionally reset the input
+            document.getElementById("addFriendInput").value = "";
+            document.getElementById("autocompleteDropdown").innerHTML = "";
+            document.getElementById("autocompleteDropdown").style.display = "none";
+         } else {
+            alert("Error: " + data.error);
+         }
+      })
+      .catch((error) => {
+         console.error("Error sending friend request:", error);
+         alert("Error sending friend request.");
+      });
+}
+
+/**************************************
+ * 4. Open Requests UI (pending friend requests)
  **************************************/
 function openRequests() {
    fetch("/get_friend_requests")
@@ -45,16 +153,24 @@ function buildRequestsUI(requests) {
    if (requests.length === 0) {
       html += "<p>No pending friend requests.</p>";
    } else {
-      // Sort alphabetically by username
+      // Sort alphabetically
       requests.sort((a, b) => a.username.localeCompare(b.username));
       requests.forEach((req) => {
          html += `
          <div class="request-item" data-request-id="${req.id}">
            <span>${req.username}</span>
-           <button type="button" class="accept-btn" onclick="acceptRequestAjax(${req.id}, this)">
+           <button
+             type="button"
+             class="accept-btn"
+             onclick="acceptRequestAjax(${req.id}, this)"
+           >
              <i class="fa fa-check" style="color: green;"></i>
            </button>
-           <button type="button" class="decline-btn" onclick="declineRequestAjax(${req.id}, this)">
+           <button
+             type="button"
+             class="decline-btn"
+             onclick="declineRequestAjax(${req.id}, this)"
+           >
              <i class="fa fa-times" style="color: red;"></i>
            </button>
          </div>
@@ -66,101 +182,7 @@ function buildRequestsUI(requests) {
 }
 
 /**************************************
- * 3. Friend Search for Add Friend UI
- **************************************/
-function onFriendSearchInput() {
-   const inputVal = document.getElementById("addFriendInput").value.trim();
-   const dropdown = document.getElementById("autocompleteDropdown");
-
-   if (!inputVal) {
-      dropdown.style.display = "none";
-      dropdown.innerHTML = "";
-      return;
-   }
-
-   // Simulate fetching matching users
-   const matchingUsers = simulateUserSearch(inputVal);
-
-   if (matchingUsers.length === 0) {
-      dropdown.style.display = "none";
-      dropdown.innerHTML = "";
-      return;
-   }
-
-   let html = "";
-   matchingUsers.forEach((user) => {
-      html += `<div class="autocomplete-item" onclick="selectUsername('${user}')">${user}</div>`;
-   });
-   dropdown.innerHTML = html;
-   dropdown.style.display = "block";
-}
-
-function simulateUserSearch(query) {
-   // Placeholder list of usernames
-   const allUsers = [
-      "FlamerEatsFeet",
-      "FlameLord",
-      "FlamingoGirl",
-      "FrodoBaggins",
-      "FunkyDude",
-      "FlowerPower",
-      "Franklin",
-      "Fiona",
-      "David",
-      "Narwhals",
-      "Frozone",
-      // ... imagine a larger list here
-   ];
-   return allUsers.filter((u) => u.toLowerCase().startsWith(query.toLowerCase())).slice(0, 50);
-}
-
-function selectUsername(username) {
-   document.getElementById("addFriendInput").value = username;
-   document.getElementById("autocompleteDropdown").style.display = "none";
-}
-
-function sendFriendRequest() {
-   const friendName = document.getElementById("addFriendInput").value.trim();
-   if (!friendName) {
-      alert("Please enter a username to send a friend request.");
-      return;
-   }
-   fetch("/send_friend_request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ friend_username: friendName }),
-   })
-      .then((response) => response.json())
-      .then((data) => {
-         if (data.success) {
-            alert("Friend request sent to: " + friendName);
-            // Optionally clear input or close the Add Friend UI:
-            document.getElementById("addFriendInput").value = "";
-            document.getElementById("autocompleteDropdown").style.display = "none";
-         } else {
-            alert("Error: " + data.error);
-         }
-      })
-      .catch((error) => {
-         console.error("Error sending friend request:", error);
-         alert("Error sending friend request.");
-      });
-}
-
-/**************************************
- * 4. Open Chat
- **************************************/
-function openChat(friendName) {
-   const chatContent = document.getElementById("chatContent");
-   if (!chatContent) return;
-   chatContent.innerHTML = `
-     <p><strong>Chat with ${friendName}</strong></p>
-     <p>(Here you can load or display chat messages with ${friendName}...)</p>
-   `;
-}
-
-/**************************************
- * 5. Accept or Decline friend request (AJAX) + Update Friend List
+ * 5. Accept or Decline Requests + Update Friend List
  **************************************/
 function acceptRequestAjax(requestId, btn) {
    const formData = new FormData();
@@ -178,17 +200,16 @@ function acceptRequestAjax(requestId, btn) {
       })
       .then((data) => {
          if (data.success) {
-            // Fade out the request item
+            // Visually remove the request item
             const requestItem = btn.closest(".request-item");
             requestItem.style.transition = "opacity 0.5s";
             requestItem.style.opacity = 0;
             setTimeout(() => {
                requestItem.remove();
-               // Then refresh the friend list
-               updateFriendList();
+               updateFriendList(); // Refresh side friend list
             }, 500);
          } else {
-            console.error("Accept request error:", data.error);
+            console.error("Error:", data.error);
          }
       })
       .catch((error) => {
@@ -212,15 +233,15 @@ function declineRequestAjax(requestId, btn) {
       })
       .then((data) => {
          if (data.success) {
-            // Fade out the request item
+            // Fade away the request item
             const requestItem = btn.closest(".request-item");
             requestItem.style.transition = "opacity 0.5s";
             requestItem.style.opacity = 0;
-            setTimeout(() => requestItem.remove(), 500);
-            // (No new friend added, so no need to updateFriendList,
-            //  but you could if you want to be sure.)
+            setTimeout(() => {
+               requestItem.remove();
+            }, 500);
          } else {
-            console.error("Decline request error:", data.error);
+            console.error("Error:", data.error);
          }
       })
       .catch((error) => {
@@ -229,7 +250,7 @@ function declineRequestAjax(requestId, btn) {
 }
 
 /**************************************
- * 6. Update friend list via new /get_friends endpoint
+ * 6. Update friend list after acceptance
  **************************************/
 function updateFriendList() {
    fetch("/get_friends")
@@ -260,6 +281,18 @@ function updateFriendList() {
          friendListContainer.innerHTML = newHTML;
       })
       .catch((error) => {
-         console.error("Error fetching updated friends list:", error);
+         console.error("Error updating friend list:", error);
       });
+}
+
+/**************************************
+ * 7. Open a chat with a friend
+ **************************************/
+function openChat(friendName) {
+   const chatContent = document.getElementById("chatContent");
+   if (!chatContent) return;
+   chatContent.innerHTML = `
+     <p><strong>Chat with ${friendName}</strong></p>
+     <p>(Here you can load or display chat messages with ${friendName}...)</p>
+   `;
 }

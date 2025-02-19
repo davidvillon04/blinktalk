@@ -19,8 +19,8 @@ app.secret_key = "your_secret_key"  # Needed for flash messages
 
 # Database configuration
 db_config = {
-    "user": "root",  # Use your MySQL username
-    "password": "Narwhals@123",  # Use your MySQL password
+    "user": "root",  # Your MySQL username
+    "password": "Narwhals@123",  # Your MySQL password
     "host": "localhost",
     "database": "blinktalk_db",
 }
@@ -57,9 +57,8 @@ def about():
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    form_data = {}  # Dictionary to pass form data back to the template
+    form_data = {}
     if request.method == "POST":
-        # Get form data and strip whitespace for username
         form_data = request.form.to_dict()
         username = form_data.get("username", "")
         password = form_data.get("password", "")
@@ -69,7 +68,7 @@ def register():
         day = form_data.get("day", "")
         year = form_data.get("year", "")
 
-        # Check that all required fields are filled out
+        # Check that all required fields are filled
         if not (username and password and confirm and email and month and day and year):
             form_data["error_general"] = "Please fill out all required fields!"
             return render_template("register.html", form_data=form_data)
@@ -79,7 +78,7 @@ def register():
             form_data["error_password_mismatch"] = "Passwords do not match."
             return render_template("register.html", form_data=form_data)
 
-        # Convert username to lowercase for case-insensitive check
+        # Convert username to lowercase for a case-insensitive check
         lowercase_username = username.lower()
 
         # Convert DOB into a date object
@@ -94,6 +93,7 @@ def register():
         if conn is None:
             form_data["error_general"] = "Database connection error!"
             return render_template("register.html", form_data=form_data)
+
         cursor = conn.cursor()
 
         # Check if the username already exists (case-insensitive)
@@ -114,14 +114,12 @@ def register():
             conn.close()
             return render_template("register.html", form_data=form_data)
 
-        # Insert new user into the table (Note: For production, hash the password!)
+        # Insert new user into the table (for production, hash the password!)
         insert_query = (
             "INSERT INTO users (username, password, email, dob) VALUES (%s, %s, %s, %s)"
         )
         cursor.execute(insert_query, (lowercase_username, password, email, dob))
         conn.commit()
-
-        # The newly inserted row ID is:
         new_user_id = cursor.lastrowid
 
         cursor.close()
@@ -132,7 +130,7 @@ def register():
 
         return redirect(url_for("new_user"))
 
-    # For GET requests or validation errors, re-render the form with current form_data
+    # For GET requests or validation errors, re-render the form
     return render_template("register.html", form_data=form_data)
 
 
@@ -150,15 +148,15 @@ def login():
             form_data["error_login"] = "Please fill out all fields."
             return render_template("login.html", form_data=form_data)
 
-        # 3. Connect to the database
+        # 3. Connect to DB
         conn = get_db_connection()
         if conn is None:
             form_data["error_login"] = "Database connection error!"
             return render_template("login.html", form_data=form_data)
 
-        cursor = conn.cursor(dictionary=True)  # dictionary=True => results as dict
+        cursor = conn.cursor(dictionary=True)
 
-        # 4. Query for a user whose username or email matches
+        # 4. Query user by username/email
         check_query = """
             SELECT id, username, password
             FROM users
@@ -168,13 +166,12 @@ def login():
         user_row = cursor.fetchone()
 
         if not user_row:
-            # No user found
             form_data["error_login"] = "Invalid username/email or password."
             cursor.close()
             conn.close()
             return render_template("login.html", form_data=form_data)
 
-        # 5. Compare the plain-text password (use hashing in production!)
+        # 5. Compare plain-text password (use hashing in production)
         if password != user_row["password"]:
             form_data["error_login"] = "Invalid username/email or password."
             cursor.close()
@@ -190,7 +187,6 @@ def login():
         # 7. Redirect to user_home
         return redirect(url_for("user_home"))
 
-    # GET request or re-render
     return render_template("login.html")
 
 
@@ -237,11 +233,10 @@ def new_user():
     user_id = session["user_id"]
 
     if request.method == "POST":
-        # If the user clicks "Skip", redirect to user_home
+        # If user clicks "Skip", go to user_home
         if "skip" in request.form:
             return redirect(url_for("user_home"))
 
-        # Process the uploaded file
         if "profile_pic" not in request.files:
             flash("No file part in the request!")
             return redirect(request.url)
@@ -282,16 +277,16 @@ def user_home():
         return redirect(url_for("login"))
 
     user_id = session["user_id"]
-    # Fetch username from DB:
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+
+    # Fetch username & profile pic
     cursor.execute("SELECT username, profile_pic FROM users WHERE id = %s", (user_id,))
     row = cursor.fetchone()
-
     username = row["username"] if row else "User"
-    profile_pic = row.get("profile_pic", None) if row else None
+    profile_pic = row["profile_pic"] if row and row["profile_pic"] else None
 
-    # Fetch the friends list
+    # Fetch the friend list
     cursor.execute(
         """
         SELECT u.id, u.username, u.profile_pic
@@ -312,15 +307,20 @@ def user_home():
     )
 
 
-# Endpoint to retrieve pending friend requests for the logged-in user
+# -----------------------
+# Friend Request Endpoints
+# -----------------------
+
+
 @app.route("/get_friend_requests")
 def get_friend_requests():
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
     user_id = session["user_id"]
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    # Retrieve pending friend requests along with sender's username
+    # All pending friend requests for this user
     cursor.execute(
         """
         SELECT fr.id, u.username
@@ -337,7 +337,6 @@ def get_friend_requests():
     return jsonify(requests_list)
 
 
-# Endpoint to accept a friend request
 @app.route("/accept_request", methods=["POST"])
 def accept_request():
     if "user_id" not in session:
@@ -348,15 +347,14 @@ def accept_request():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    # Mark the request as accepted
+    # Mark request as accepted
     cursor.execute(
         "UPDATE friend_requests SET status = 'accepted' WHERE id = %s AND receiver_id = %s",
         (request_id, user_id),
     )
     conn.commit()
 
-    # Now we add a row to the `friendships` table
+    # Insert into friendships
     cursor.execute("SELECT sender_id FROM friend_requests WHERE id = %s", (request_id,))
     row = cursor.fetchone()
     if row:
@@ -371,7 +369,6 @@ def accept_request():
 
     cursor.close()
     conn.close()
-
     return jsonify({"success": True})
 
 
@@ -379,6 +376,7 @@ def accept_request():
 def decline_request():
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
+
     request_id = request.form.get("request_id")
     user_id = session["user_id"]
 
@@ -389,9 +387,9 @@ def decline_request():
         (request_id, user_id),
     )
     conn.commit()
+
     cursor.close()
     conn.close()
-
     return jsonify({"success": True})
 
 
@@ -424,7 +422,7 @@ def send_friend_request():
     friend_id = friend["id"]
     sender_id = session["user_id"]
 
-    # Check if a pending friend request already exists
+    # Check if already a pending request
     cursor.execute(
         """
         SELECT id FROM friend_requests
@@ -449,37 +447,47 @@ def send_friend_request():
     return jsonify({"success": True})
 
 
-# =============================
-# NEW ENDPOINT: /get_friends
-# =============================
-@app.route("/get_friends", methods=["GET"])
-def get_friends():
-    """Return the updated friend list as JSON."""
+# -----------------------------------------------
+# NEW ENDPOINT: /search_users for live dropdown
+# -----------------------------------------------
+@app.route("/search_users", methods=["GET"])
+def search_users():
+    """
+    Returns up to 50 usernames that start with the given `query`.
+    Excludes the currently logged-in user.
+    """
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
+
     user_id = session["user_id"]
+    query = request.args.get("query", "").strip().lower()
+
+    # If query is empty, return no results
+    if not query:
+        return jsonify({"results": []})
 
     conn = get_db_connection()
     if not conn:
         return jsonify({"error": "Database connection error"}), 500
+
     cursor = conn.cursor(dictionary=True)
-
-    cursor.execute(
-        """
-        SELECT u.id, u.username, u.profile_pic
-        FROM friendships f
-        JOIN users u ON (u.id = f.user1_id OR u.id = f.user2_id)
-        WHERE (f.user1_id = %s OR f.user2_id = %s)
-        AND u.id != %s
-        ORDER BY u.username ASC
-        """,
-        (user_id, user_id, user_id),
-    )
-    friends = cursor.fetchall()
-
+    # We'll do 'query%' so it finds users that start with query
+    like_query = query + "%"
+    sql = """
+        SELECT username FROM users
+        WHERE LOWER(username) LIKE %s
+          AND id != %s
+        ORDER BY username
+        LIMIT 50
+    """
+    cursor.execute(sql, (like_query, user_id))
+    rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    return jsonify({"friends": friends})
+
+    # Return only the usernames
+    results = [row["username"] for row in rows]
+    return jsonify({"results": results})
 
 
 if __name__ == "__main__":
