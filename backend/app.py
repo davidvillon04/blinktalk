@@ -422,7 +422,21 @@ def send_friend_request():
     friend_id = friend["id"]
     sender_id = session["user_id"]
 
-    # Check if already a pending request
+    # 1. Check if already friends
+    user1 = min(sender_id, friend_id)
+    user2 = max(sender_id, friend_id)
+
+    cursor.execute(
+        "SELECT id FROM friendships WHERE user1_id = %s AND user2_id = %s",
+        (user1, user2),
+    )
+    if cursor.fetchone():
+        # They are already in the friendships table => already friends
+        cursor.close()
+        conn.close()
+        return jsonify({"error": "You are already friends with this user!"}), 400
+
+    # 2. Check if there's already a pending friend request
     cursor.execute(
         """
         SELECT id FROM friend_requests
@@ -435,7 +449,7 @@ def send_friend_request():
         conn.close()
         return jsonify({"error": "Friend request already sent"}), 400
 
-    # Insert the new friend request
+    # 3. Insert the new friend request
     cursor.execute(
         "INSERT INTO friend_requests (sender_id, receiver_id) VALUES (%s, %s)",
         (sender_id, friend_id),
