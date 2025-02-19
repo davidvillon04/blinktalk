@@ -396,24 +396,15 @@ function openChat(friendId, friendName) {
             const pic = msg.sender_profile_pic || "/static/profile_pics/default.png";
 
             // Set the date
-            const rawTimestamp = msg.created_at; // e.g. "2023-03-21 19:15:00"
-            const dateObj = new Date(rawTimestamp.replace(" ", "T")); // "2023-03-21T19:15:00"
-
-            // Format the time to 12-hour local time
-            const timeOptions = {
-               hour: "2-digit",
-               minute: "2-digit",
-               hour12: true,
-            };
-            // e.g. "7:15 PM"
-            const localTimeString = dateObj.toLocaleTimeString([], timeOptions);
+            const timestampLabel = formatMessageTimestamp(msg.created_at);
 
             html += `
            <div class="chat-message" style="display:flex; margin-bottom:0.5rem;">
              <img src="${pic}" style="width:32px; height:32px; border-radius:50%; margin-right:8px;"/>
              <div>
-               <strong>${who}:</strong> ${msg.content}
-               <div style="font-size:0.8rem; color:#999;">${localTimeString}</div>
+               <strong>${who}</strong>
+               <span style="opacity:0.8; font-size:0.8rem; margin-left:8px;">${timestampLabel}</span>
+               <div>${msg.content}</div>
              </div>
            </div>
          `;
@@ -551,4 +542,31 @@ function formatMessageTimestamp(rawTimestamp) {
 
       return `${m}/${d}/${y} ${timeString}`;
    }
+}
+
+function parseMySQLDateTime(mysqlDateStr) {
+   // Typical MySQL DATETIME is "YYYY-MM-DD HH:MM:SS"
+   // 1. Split by space => ["YYYY-MM-DD", "HH:MM:SS"]
+   const [datePart, timePart] = mysqlDateStr.split(" ");
+   if (!datePart || !timePart) return null; // invalid format
+
+   // 2. Split datePart => [YYYY, MM, DD], split timePart => [HH, mm, ss]
+   const [year, month, day] = datePart.split("-");
+   const [hour, minute, second] = timePart.split(":");
+
+   // 3. Convert them to integers
+   const yyyy = parseInt(year, 10);
+   const MM = parseInt(month, 10) - 1; // JS months 0-11
+   const dd = parseInt(day, 10);
+   const hh = parseInt(hour, 10);
+   const mm = parseInt(minute, 10);
+   const ss = parseInt(second || "0", 10);
+
+   // 4. Create the Date object in local time
+   //    (Or if you know your DB is storing UTC, you can adjust or add "Z", etc.)
+   const dateObj = new Date(yyyy, MM, dd, hh, mm, ss);
+   if (isNaN(dateObj.getTime())) {
+      return null; // invalid date
+   }
+   return dateObj;
 }
