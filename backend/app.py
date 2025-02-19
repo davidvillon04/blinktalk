@@ -294,10 +294,6 @@ def user_home():
     return render_template("user_home.html", username=username, profile_pic=profile_pic)
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
-
-
 # Endpoint to retrieve pending friend requests for the logged-in user
 @app.route("/get_friend_requests")
 def get_friend_requests():
@@ -373,3 +369,7 @@ def decline_request():
     conn.close()
 
     return jsonify({"success": True})
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
