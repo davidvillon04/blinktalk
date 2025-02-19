@@ -10,7 +10,7 @@
    <div class="friends-column">
       <!-- Requests Header -->
       <div class="requests-header" onclick="openRequests()" style="cursor: pointer">
-         <h2>Requests <span class="request-count" id="requestCount">3</span></h2>
+         <h2>Requests <span class="request-count" id="requestCount">0</span></h2>
       </div>
 
       <!-- Friends Header with Plus Icon -->
@@ -72,4 +72,11 @@
 
 <!-- Reference external JavaScript file for user_home functionality -->
 <script src="{{ url_for('static', filename='js/user_home.js') }}"></script>
+
+<script>
+   document.addEventListener("DOMContentLoaded", () => {
+      // Make an initial call to fetch and display the correct # of pending requests
+      updateRequestCount();
+   });
+</script>
 {% endblock %}
