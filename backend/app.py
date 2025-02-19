@@ -333,24 +333,21 @@ def accept_request():
     user_id = session["user_id"]
 
     conn = get_db_connection()
-    if conn is None:
-        flash("Database connection error!")
-        return redirect(url_for("user_home"))
     cursor = conn.cursor()
 
-    # Update the friend request status to 'accepted'
+    # Update the friend request to accepted
     cursor.execute(
         "UPDATE friend_requests SET status = 'accepted' WHERE id = %s AND receiver_id = %s",
         (request_id, user_id),
     )
     conn.commit()
 
-    # Retrieve the sender's ID from the friend request
+    # Retrieve the sender's id
     cursor.execute("SELECT sender_id FROM friend_requests WHERE id = %s", (request_id,))
     row = cursor.fetchone()
     if row:
         sender_id = row[0]
-        # Insert into friendships table (store the friendship once, using consistent order)
+        # Insert into friendships table (ensure the smaller id comes first)
         user1 = min(user_id, sender_id)
         user2 = max(user_id, sender_id)
         cursor.execute(
