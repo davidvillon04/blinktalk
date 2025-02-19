@@ -466,9 +466,7 @@ function sendChatMessage() {
          }
          // success => clear input, reload messages
          inputField.value = "";
-         // fetch the updated conversation
          openChat(friendId, friendName);
-         // optionally reorder friend list
          updateFriendList();
       })
       .catch((err) => {

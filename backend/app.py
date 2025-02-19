@@ -540,20 +540,13 @@ def get_friends():
 
 @app.route("/send_message", methods=["POST"])
 def send_message():
-    """
-    POST JSON: { "friend_id": 123, "message": "Hello there!" }
 
-    Inserts a row into the messages table, if the user is logged in.
-    """
     # 1. Ensure the user is logged in
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
 
     # 2. Parse JSON data from the client
     data = request.get_json()
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
-
     friend_id = data.get("friend_id")
     message_text = data.get("message")
     sender_id = session["user_id"]
@@ -575,6 +568,7 @@ def send_message():
     """
     cursor.execute(insert_sql, (sender_id, friend_id, message_text))
     conn.commit()
+    new_id = cursor.lastrowid
 
     # ================================
     # Update last_interaction
@@ -588,11 +582,26 @@ def send_message():
     cursor.execute(update_sql, (sender_id, friend_id, friend_id, sender_id))
     conn.commit()
 
+    cursor.execute(
+        """
+        SELECT
+            m.id, m.sender_id, m.receiver_id, m.content, m.created_at,
+            sender.username AS sender_username,
+            sender.profile_pic AS sender_profile_pic
+        FROM messages m
+        JOIN users sender ON sender.id = m.sender_id
+        WHERE m.id = %s
+        """,
+        (new_id,),
+    )
+
+    new_msg_row = cursor.fetchone()
+
     cursor.close()
     conn.close()
 
     # 5. Return success JSON
-    return jsonify({"success": True})
+    return jsonify({"success": True, "message": new_msg_row})
 
 
 @app.route("/get_messages", methods=["GET"])
