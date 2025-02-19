@@ -298,33 +298,97 @@ if __name__ == "__main__":
     app.run(debug=True)
 
 
-# Example: Accept friend request endpoint
+# Endpoint to retrieve pending friend requests for the logged-in user
+@app.route("/get_friend_requests")
+def get_friend_requests():
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+    user_id = session["user_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    # Retrieve pending friend requests along with sender's username
+    cursor.execute(
+        """
+        SELECT fr.id, u.username
+        FROM friend_requests fr
+        JOIN users u ON fr.sender_id = u.id
+        WHERE fr.receiver_id = %s AND fr.status = 'pending'
+        ORDER BY u.username ASC
+    """,
+        (user_id,),
+    )
+    requests_list = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(requests_list)
+
+
+# Endpoint to accept a friend request
 @app.route("/accept_request", methods=["POST"])
 def accept_request():
+    if "user_id" not in session:
+        flash("Please log in first.")
+        return redirect(url_for("login"))
     request_id = request.form.get("request_id")
-    current_user_id = session.get("user_id")
+    user_id = session["user_id"]
 
     conn = get_db_connection()
     cursor = conn.cursor()
+    # Update friend request status to 'accepted'
+    cursor.execute(
+        """
+        UPDATE friend_requests 
+        SET status = 'accepted'
+        WHERE id = %s AND receiver_id = %s
+    """,
+        (request_id, user_id),
+    )
+    conn.commit()
 
-    # Update friend request status to accepted
-    update_query = "UPDATE friend_requests SET status = 'accepted' WHERE id = %s AND receiver_id = %s"
-    cursor.execute(update_query, (request_id, current_user_id))
-
-    # Retrieve the sender_id from the friend request
+    # Retrieve the sender's ID for the accepted request
     cursor.execute("SELECT sender_id FROM friend_requests WHERE id = %s", (request_id,))
     row = cursor.fetchone()
     if row:
         sender_id = row[0]
-        # Insert into friendships table (order the IDs)
-        user1 = min(current_user_id, sender_id)
-        user2 = max(current_user_id, sender_id)
-        insert_query = "INSERT INTO friendships (user1_id, user2_id) VALUES (%s, %s)"
-        cursor.execute(insert_query, (user1, user2))
+        # Insert a new row into the friendships table
+        # Ensure a consistent order for the user IDs
+        user1 = min(user_id, sender_id)
+        user2 = max(user_id, sender_id)
+        cursor.execute(
+            """
+            INSERT INTO friendships (user1_id, user2_id) VALUES (%s, %s)
+        """,
+            (user1, user2),
+        )
         conn.commit()
 
     cursor.close()
     conn.close()
-
     flash("Friend request accepted!")
+    return redirect(url_for("user_home"))
+
+
+# Endpoint to decline a friend request
+@app.route("/decline_request", methods=["POST"])
+def decline_request():
+    if "user_id" not in session:
+        flash("Please log in first.")
+        return redirect(url_for("login"))
+    request_id = request.form.get("request_id")
+    user_id = session["user_id"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        UPDATE friend_requests 
+        SET status = 'declined'
+        WHERE id = %s AND receiver_id = %s
+    """,
+        (request_id, user_id),
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    flash("Friend request declined.")
     return redirect(url_for("user_home"))
