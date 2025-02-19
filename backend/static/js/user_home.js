@@ -323,13 +323,94 @@ function updateFriendList() {
 /**************************************
  * 7. Open a chat with a friend
  **************************************/
-function openChat(friendName) {
+function openChat(friendId, friendName) {
+   // The chat-content area in the center column
    const chatContent = document.getElementById("chatContent");
    if (!chatContent) return;
+
+   // Build some basic HTML structure:
    chatContent.innerHTML = `
-     <p><strong>Chat with ${friendName}</strong></p>
-     <p>(Here you can load or display chat messages with ${friendName}...)</p>
+     <div class="chat-header">
+       <h2>Chat with ${friendName}</h2>
+     </div>
+     <div class="chat-messages" id="chatMessages" style="max-height: 300px; overflow-y: auto; border: 1px solid #aaa; margin-bottom: 1rem; padding: 0.5rem;">
+       Loading messages...
+     </div>
+     <div class="chat-input">
+       <input type="text" id="chatInputField" placeholder="Type your message..." style="width: 70%;" />
+       <button onclick="sendChatMessage(${friendId}, '${friendName}')">Send</button>
+     </div>
    `;
+
+   // 2. Fetch existing messages from /get_messages
+   fetch(`/get_messages?friend_id=${friendId}`)
+      .then((res) => res.json())
+      .then((data) => {
+         if (data.error) {
+            console.error("Error fetching messages:", data.error);
+            const chatMessagesDiv = document.getElementById("chatMessages");
+            if (chatMessagesDiv) {
+               chatMessagesDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+            }
+            return;
+         }
+         if (!data.messages) return;
+
+         // 3. Render messages in the chat area
+         const chatMessagesDiv = document.getElementById("chatMessages");
+         if (!chatMessagesDiv) return;
+
+         let html = "";
+         data.messages.forEach((msg) => {
+            const who = msg.sender_id === CURRENT_USER_ID ? "You" : msg.sender_username;
+            html += `
+           <div class="chat-message" style="margin-bottom: 0.5rem;">
+             <strong>${who}:</strong> ${msg.content}
+             <div style="font-size:0.8rem; color:#999;">${msg.created_at}</div>
+           </div>
+         `;
+         });
+         chatMessagesDiv.innerHTML = html;
+
+         // Scroll to bottom
+         chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+      })
+      .catch((err) => {
+         console.error("Error in fetch get_messages:", err);
+      });
+}
+
+// 2. Function to send a message using /send_message
+function sendChatMessage(friendId, friendName) {
+   const inputField = document.getElementById("chatInputField");
+   if (!inputField) return;
+
+   const messageText = inputField.value.trim();
+   if (!messageText) return;
+
+   fetch("/send_message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+         friend_id: friendId,
+         message: messageText,
+      }),
+   })
+      .then((res) => res.json())
+      .then((data) => {
+         if (data.error) {
+            console.error("Error sending message:", data.error);
+            return;
+         }
+         // Message was sent successfully
+         inputField.value = ""; // Clear the input field
+
+         openChat(friendId, friendName);
+         updateFriendList();
+      })
+      .catch((err) => {
+         console.error("Error in sendChatMessage:", err);
+      });
 }
 
 /**************************************

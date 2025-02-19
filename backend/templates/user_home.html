@@ -2,6 +2,7 @@
 
 <!-- Make the current username accessible in JS -->
 <script>
+   const CURRENT_USER_ID = "{{ session['user_id'] }}";
    const CURRENT_USERNAME = "{{ username|safe }}";
 </script>
 
@@ -21,11 +22,10 @@
 
       <ul class="friend-list">
          {% for friend in friends %}
-         <li onclick="openChat('{{ friend.username }}')">
+         <li onclick="openChat('{{ friend.id }}', '{{ friend.username }}')">
             <img
                class="friend-avatar"
                src="{{ friend.profile_pic or url_for('static', filename='profile_pics/default.png') }}"
-               alt="{{ friend.username }} Avatar"
             />
             {{ friend.username }}
          </li>

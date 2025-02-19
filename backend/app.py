@@ -519,22 +519,131 @@ def get_friends():
         return jsonify({"error": "Database connection error"}), 500
     cursor = conn.cursor(dictionary=True)
 
+    # Return 'friends' sorted by last_interaction DESC (newest first)
     cursor.execute(
         """
-        SELECT u.id, u.username, u.profile_pic
+        SELECT u.id, u.username, u.profile_pic, f.last_interaction
         FROM friendships f
         JOIN users u ON (u.id = f.user1_id OR u.id = f.user2_id)
         WHERE (f.user1_id = %s OR f.user2_id = %s)
           AND u.id != %s
-        ORDER BY u.username ASC
+        ORDER BY f.last_interaction DESC
         """,
         (user_id, user_id, user_id),
     )
-    friends = cursor.fetchall()
+    rows = cursor.fetchall()
 
     cursor.close()
     conn.close()
-    return jsonify({"friends": friends})
+    return jsonify({"friends": rows})
+
+
+@app.route("/send_message", methods=["POST"])
+def send_message():
+    """
+    POST JSON: { "friend_id": 123, "message": "Hello there!" }
+
+    Inserts a row into the messages table, if the user is logged in.
+    """
+    # 1. Ensure the user is logged in
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    # 2. Parse JSON data from the client
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    friend_id = data.get("friend_id")
+    message_text = data.get("message")
+    sender_id = session["user_id"]
+
+    # 3. Validate
+    if not friend_id or not message_text:
+        return jsonify({"error": "Missing friend_id or message"}), 400
+
+    # 4. Connect to DB and insert
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "Database connection error"}), 500
+    cursor = conn.cursor()
+
+    # Insert the new message
+    insert_sql = """
+        INSERT INTO messages (sender_id, receiver_id, content)
+        VALUES (%s, %s, %s)
+    """
+    cursor.execute(insert_sql, (sender_id, friend_id, message_text))
+    conn.commit()
+
+    # ================================
+    # Update last_interaction
+    # ================================
+    update_sql = """
+        UPDATE friendships
+        SET last_interaction = NOW()
+        WHERE (user1_id = %s AND user2_id = %s)
+           OR (user1_id = %s AND user2_id = %s)
+    """
+    cursor.execute(update_sql, (sender_id, friend_id, friend_id, sender_id))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    # 5. Return success JSON
+    return jsonify({"success": True})
+
+
+@app.route("/get_messages", methods=["GET"])
+def get_messages():
+    """
+    Returns all messages between the logged-in user and the specified friend.
+    Expects a query param ?friend_id=XYZ (the user's ID).
+
+    Example request: GET /get_messages?friend_id=7
+    Response: { "messages": [ {...}, {...}, ... ] }
+    """
+    # 1. Check if user is logged in
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    current_user_id = session["user_id"]
+
+    # 2. Get friend_id from the query string (e.g. /get_messages?friend_id=7)
+    friend_id = request.args.get("friend_id", type=int)
+    if not friend_id:
+        return jsonify({"error": "No friend_id provided"}), 400
+
+    # 3. Connect to DB
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "Database connection error"}), 500
+    cursor = conn.cursor(dictionary=True)
+
+    # 4. Fetch all messages between current_user and friend, sorted by created_at ascending
+    sql = """
+        SELECT
+            m.id,
+            m.sender_id,
+            m.receiver_id,
+            m.content,
+            m.created_at,
+            sender.username AS sender_username
+        FROM messages m
+        JOIN users sender ON sender.id = m.sender_id
+        WHERE (m.sender_id = %s AND m.receiver_id = %s)
+           OR (m.sender_id = %s AND m.receiver_id = %s)
+        ORDER BY m.created_at ASC
+    """
+    cursor.execute(sql, (current_user_id, friend_id, friend_id, current_user_id))
+    rows = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    # 5. Return as JSON
+    return jsonify({"messages": rows})
 
 
 if __name__ == "__main__":
