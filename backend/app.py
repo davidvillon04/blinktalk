@@ -291,11 +291,24 @@ def user_home():
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT username, profile_pic FROM users WHERE id = %s", (user_id,))
     row = cursor.fetchone()
-    cursor.close()
-    conn.close()
 
     username = row["username"] if row else "User"
     profile_pic = row.get("profile_pic", None) if row else None
+
+    cursor.execute(
+        """
+        SELECT u.id, u.username, u.profile_pic
+        FROM friendships f
+        JOIN users u ON (u.id = f.user1_id OR u.id = f.user2_id)
+        WHERE (f.user1_id = %s OR f.user2_id = %s) AND u.id != %s
+        ORDER BY u.username ASC
+    """,
+        (user_id, user_id, user_id),
+    )
+    friends = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
 
     return render_template("user_home.html", username=username, profile_pic=profile_pic)
 
