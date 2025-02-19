@@ -302,15 +302,15 @@ function updateFriendList() {
          data.friends.forEach((friend) => {
             const pic = friend.profile_pic || "/static/profile_pics/default.png";
             newHTML += `
-           <li onclick="openChat('${friend.username}')">
-             <img
-               class="friend-avatar"
-               src="${pic}"
-               alt="${friend.username} Avatar"
-             />
-             ${friend.username}
-           </li>
-         `;
+               <li onclick="openChat(${friend.id}, '${friend.username}')">
+                  <img
+                     class="friend-avatar"
+                     src="${pic}"
+                     alt="${friend.username} Avatar"
+                  />
+                  ${friend.username}
+               </li>
+            `;
          });
 
          friendListContainer.innerHTML = newHTML;
