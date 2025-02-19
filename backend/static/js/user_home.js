@@ -374,7 +374,9 @@ function openChat(friendId, friendName) {
          placeholder="Type your message..."
          onkeydown="handleChatKeyDown(event)"
       />
-      <button onclick="sendChatMessage()">Send</button>
+      <button class="send-button" onclick="sendChatMessage()">
+         <i class="fa-solid fa-paper-plane"></i>
+      </button>
    `;
 
    // 3) Store these globally so sendChatMessage() knows whom to message
@@ -421,6 +423,13 @@ function openChat(friendId, friendName) {
       .catch((err) => {
          console.error("Error loading messages:", err);
       });
+}
+
+function handleChatKeyDown(event) {
+   if (event.key === "Enter") {
+      event.preventDefault();
+      sendChatMessage();
+   }
 }
 
 // 2. Function to send a message using /send_message
