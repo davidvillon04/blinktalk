@@ -481,6 +481,12 @@ meter::-moz-meter-bar {
     margin-bottom: 2rem;
     color: #aaa;
 }
+
+.add-friend-error {
+    color: red;
+    margin-bottom: 0.5rem;
+  }
+  
 .add-friend-input {
     display: flex;
     width: 100%;

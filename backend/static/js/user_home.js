@@ -10,27 +10,28 @@ function openAddFriend() {
        <div class="add-friend-box">
          <h2>Add Friend</h2>
          <p>You can add friends by their username.</p>
-         <div class="add-friend-input">
-           <!-- ERROR MESSAGE DIV -->
-           <div id="addFriendError" style="color:red; margin-bottom: 8px;"></div>
  
+         <!-- The error div, centered above the input -->
+         <div id="addFriendError" class="add-friend-error"></div>
+ 
+         <!-- The input + button side by side -->
+         <div class="add-friend-input">
            <input
              type="text"
              id="addFriendInput"
              placeholder="Enter a username..."
              oninput="onFriendSearchInput()"
            />
- 
            <button class="add-friend-button" onclick="sendFriendRequest()">
              Send Request
            </button>
- 
-           <div
-             id="autocompleteDropdown"
-             class="autocomplete-dropdown"
-             style="display: none;"
-           ></div>
          </div>
+ 
+         <div
+           id="autocompleteDropdown"
+           class="autocomplete-dropdown"
+           style="display: none;"
+         ></div>
        </div>
      </div>
    `;
