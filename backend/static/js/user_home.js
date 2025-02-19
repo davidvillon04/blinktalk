@@ -1,6 +1,6 @@
 // user_home.js
 
-// 1. Open Add Friend UI (already implemented)
+// 1. Open Add Friend UI in the center column
 function openAddFriend() {
    const mainContent = document.getElementById("mainContent");
    mainContent.innerHTML = `
@@ -18,24 +18,48 @@ function openAddFriend() {
     `;
 }
 
-// 2. Open Requests UI
+// 2. Open Requests UI by fetching pending friend requests from the server
 function openRequests() {
-   // Simulated friend requests (in a real app, fetch from your server)
-   const friendRequests = ["Alice", "Flamer", "Zoe"];
-   friendRequests.sort(); // Sort alphabetically
+   // In production, replace the simulated fetch with a real AJAX call:
+   /*
+    fetch("/get_friend_requests")
+      .then(response => response.json())
+      .then(data => {
+        buildRequestsUI(data);
+      })
+      .catch(error => {
+        console.error("Error fetching friend requests:", error);
+      });
+    */
+   // For now, simulate the request data:
+   const simulatedRequests = [
+      { id: 1, username: "Alice" },
+      { id: 2, username: "Flamer" },
+      { id: 3, username: "Zoe" },
+   ];
+   buildRequestsUI(simulatedRequests);
+}
 
+function buildRequestsUI(requests) {
    let html = '<div class="requests-container">';
    html += "<h2>Friend Requests</h2>";
 
-   if (friendRequests.length === 0) {
+   if (requests.length === 0) {
       html += "<p>No pending friend requests.</p>";
    } else {
-      friendRequests.forEach((request) => {
+      requests.sort((a, b) => a.username.localeCompare(b.username));
+      requests.forEach((req) => {
          html += `
           <div class="request-item">
-            <span>${request}</span>
-            <button class="accept-btn" onclick="acceptRequest('${request}')"><i class="fa fa-check" style="color: green;"></i></button>
-            <button class="decline-btn" onclick="declineRequest('${request}')"><i class="fa fa-times" style="color: red;"></i></button>
+            <span>${req.username}</span>
+            <form method="POST" action="/accept_request" style="display:inline">
+              <input type="hidden" name="request_id" value="${req.id}">
+              <button type="submit" class="accept-btn"><i class="fa fa-check" style="color: green;"></i></button>
+            </form>
+            <form method="POST" action="/decline_request" style="display:inline">
+              <input type="hidden" name="request_id" value="${req.id}">
+              <button type="submit" class="decline-btn"><i class="fa fa-times" style="color: red;"></i></button>
+            </form>
           </div>
         `;
       });
@@ -44,20 +68,7 @@ function openRequests() {
    document.getElementById("mainContent").innerHTML = html;
 }
 
-// 3. Accept and Decline Functions (simulated)
-function acceptRequest(requestName) {
-   alert("Accepted friend request from " + requestName);
-   // In production, send an AJAX call to update the server, then refresh the Requests view.
-   openRequests();
-}
-
-function declineRequest(requestName) {
-   alert("Declined friend request from " + requestName);
-   // In production, send an AJAX call to update the server, then refresh the Requests view.
-   openRequests();
-}
-
-// 4. Friend search functions (existing)
+// 3. Friend search functions for Add Friend UI
 function onFriendSearchInput() {
    const inputVal = document.getElementById("addFriendInput").value.trim();
    const dropdown = document.getElementById("autocompleteDropdown");
@@ -114,10 +125,11 @@ function sendFriendRequest() {
       alert("Please enter a username to send a friend request.");
       return;
    }
+   // In production, send an AJAX POST request to your server to create the friend request.
    alert(`Friend request sent to: ${friendName}`);
 }
 
-// 5. Open Chat (existing)
+// 4. Open Chat (existing)
 function openChat(friendName) {
    const chatContent = document.getElementById("chatContent");
    if (!chatContent) return;
