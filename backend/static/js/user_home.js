@@ -302,7 +302,7 @@ function updateFriendList() {
          data.friends.forEach((friend) => {
             const pic = friend.profile_pic || "/static/profile_pics/default.png";
             newHTML += `
-               <li onclick="openChat(${friend.id}, '${friend.username}')">
+               <li id="friendLi${friend.id}" onclick="openChat(${friend.id}, '${friend.username}')">
                   <img
                      class="friend-avatar"
                      src="${pic}"
@@ -324,6 +324,17 @@ function updateFriendList() {
  * 7. Open a chat with a friend
  **************************************/
 function openChat(friendId, friendName) {
+   // 1. Remove the "active" class from all friend <li> elements
+   document.querySelectorAll(".friend-list li").forEach((li) => {
+      li.classList.remove("active");
+   });
+
+   // 2. Add "active" to the friend the user just clicked
+   const thisLi = document.getElementById("friendLi" + friendId);
+   if (thisLi) {
+      thisLi.classList.add("active");
+   }
+
    // 1) Set the header
    const chatHeader = document.getElementById("chatHeader");
    chatHeader.innerHTML = `<h2>Chat with ${friendName}</h2>`;

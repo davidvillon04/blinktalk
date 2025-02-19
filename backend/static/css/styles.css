@@ -365,6 +365,12 @@ meter::-moz-meter-bar {
 .friend-list li:hover {
     background-color: rgba(97, 67, 61, 0.9);
 }
+
+.friend-list li.active {
+    background-color: rgba(97, 67, 61, 0.9);
+  }
+  
+
 .friend-avatar {
     width: 32px;
     height: 32px;
