@@ -525,3 +525,31 @@ meter::-moz-meter-bar {
     background-color: #d66a18;
     transform: scale(1.05);
 }
+
+/* ===== Requests UI Styles ===== */
+.requests-container {
+    padding: 1rem;
+  }
+  .requests-container h2 {
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .request-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: rgba(47, 49, 54, 0.8);
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+  }
+  .request-item span {
+    flex: 1;
+  }
+  .accept-btn, .decline-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-left: 0.5rem;
+  }
+  

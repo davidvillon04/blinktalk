@@ -296,3 +296,35 @@ def user_home():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+# Example: Accept friend request endpoint
+@app.route("/accept_request", methods=["POST"])
+def accept_request():
+    request_id = request.form.get("request_id")
+    current_user_id = session.get("user_id")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Update friend request status to accepted
+    update_query = "UPDATE friend_requests SET status = 'accepted' WHERE id = %s AND receiver_id = %s"
+    cursor.execute(update_query, (request_id, current_user_id))
+
+    # Retrieve the sender_id from the friend request
+    cursor.execute("SELECT sender_id FROM friend_requests WHERE id = %s", (request_id,))
+    row = cursor.fetchone()
+    if row:
+        sender_id = row[0]
+        # Insert into friendships table (order the IDs)
+        user1 = min(current_user_id, sender_id)
+        user2 = max(current_user_id, sender_id)
+        insert_query = "INSERT INTO friendships (user1_id, user2_id) VALUES (%s, %s)"
+        cursor.execute(insert_query, (user1, user2))
+        conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    flash("Friend request accepted!")
+    return redirect(url_for("user_home"))
