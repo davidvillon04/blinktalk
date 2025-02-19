@@ -363,12 +363,24 @@ function openChat(friendId, friendName) {
          let html = "";
          data.messages.forEach((msg) => {
             const who = msg.sender_id === CURRENT_USER_ID ? "You" : msg.sender_username;
+            const profilePic = msg.sender_profile_pic || "/static/profile_pics/default.png";
+
             html += `
-           <div class="chat-message" style="margin-bottom: 0.5rem;">
-             <strong>${who}:</strong> ${msg.content}
-             <div style="font-size:0.8rem; color:#999;">${msg.created_at}</div>
-           </div>
-         `;
+               <div class="chat-message" style="display: flex; margin-bottom: 0.5rem; align-items: center;">
+                  <!-- Avatar on the left -->
+                  <img
+                     src="${profilePic}"
+                     alt="Avatar"
+                     style="width: 32px; height: 32px; border-radius: 50%; margin-right: 8px;"
+                  />
+
+                  <!-- Message text & timestamp -->
+                  <div>
+                     <strong>${who}:</strong> ${msg.content}
+                     <div style="font-size:0.8rem; color:#999;">${msg.created_at}</div>
+                  </div>
+               </div>
+            `;
          });
          chatMessagesDiv.innerHTML = html;
 
