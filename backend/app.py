@@ -446,5 +446,30 @@ def send_friend_request():
     return jsonify({"success": True})
 
 
+@app.route("/get_friends", methods=["GET"])
+def get_friends():
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+    user_id = session["user_id"]
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        """
+        SELECT u.id, u.username, u.profile_pic
+        FROM friendships f
+        JOIN users u ON (u.id = f.user1_id OR u.id = f.user2_id)
+        WHERE (f.user1_id = %s OR f.user2_id = %s) AND u.id != %s
+        ORDER BY u.username ASC
+        """,
+        (user_id, user_id, user_id),
+    )
+    friends = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return jsonify({"friends": friends})
+
+
 if __name__ == "__main__":
     app.run(debug=True)
