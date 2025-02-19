@@ -464,9 +464,18 @@ function sendChatMessage() {
             console.error("Error sending message:", data.error);
             return;
          }
-         // success => clear input, reload messages
+         // success => clear input
          inputField.value = "";
-         openChat(friendId, friendName);
+
+         // 2. data.message is the newly inserted row from the DB
+         const newMsg = data.message;
+         if (!newMsg) {
+            console.error("No new message object returned from server!");
+            return;
+         }
+         // 3. Append the new message to the bottom of the chat
+         appendOneMessage(newMsg);
+
          updateFriendList();
       })
       .catch((err) => {
@@ -480,6 +489,43 @@ function sendChatMessage() {
             refocusInput.focus();
          }
       });
+}
+
+function appendOneMessage(msg) {
+   // The container
+   const chatMessagesDiv = document.getElementById("chatMessages");
+   if (!chatMessagesDiv) return;
+
+   // Decide who is "You" vs friend
+   const who = msg.sender_id === CURRENT_USER_ID ? "You" : msg.sender_username;
+   const pic = msg.sender_profile_pic || "/static/profile_pics/default.png";
+
+   // Convert the date/time from e.g. "Wed, 19 Feb 2025 02:00:41 GMT"
+   const dateObj = new Date(msg.created_at);
+   const timestampLabel = formatMessageTimestamp(dateObj);
+
+   // Build the snippet
+   const msgHtml = `
+     <div class="chat-message" style="display:flex; margin-bottom:0.5rem;">
+       <img
+         src="${pic}"
+         style="width:32px; height:32px; border-radius:50%; margin-right:8px;"
+       />
+       <div>
+         <strong>${who}</strong>
+         <span style="opacity:0.8; font-size:0.8rem; margin-left:8px;">
+           ${timestampLabel}
+         </span>
+         <div>${msg.content}</div>
+       </div>
+     </div>
+   `;
+
+   // Insert at the bottom
+   chatMessagesDiv.insertAdjacentHTML("beforeend", msgHtml);
+
+   // Scroll down
+   chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
 }
 
 /**************************************
