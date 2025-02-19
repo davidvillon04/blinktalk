@@ -379,5 +379,59 @@ def decline_request():
     return jsonify({"success": True})
 
 
+@app.route("/send_friend_request", methods=["POST"])
+def send_friend_request():
+    # Ensure the sender is logged in
+    if "user_id" not in session:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    friend_username = data.get("friend_username", "").lower()
+    if not friend_username:
+        return jsonify({"error": "No username provided"}), 400
+
+    conn = get_db_connection()
+    if conn is None:
+        return jsonify({"error": "Database connection error"}), 500
+    cursor = conn.cursor(dictionary=True)
+
+    # Look up the friend's user ID
+    cursor.execute(
+        "SELECT id FROM users WHERE LOWER(username) = %s", (friend_username,)
+    )
+    friend = cursor.fetchone()
+    if not friend:
+        cursor.close()
+        conn.close()
+        return jsonify({"error": "User not found"}), 404
+
+    friend_id = friend["id"]
+    sender_id = session["user_id"]
+
+    # Check if a pending friend request already exists
+    cursor.execute(
+        """
+        SELECT id FROM friend_requests 
+        WHERE sender_id = %s AND receiver_id = %s AND status = 'pending'
+        """,
+        (sender_id, friend_id),
+    )
+    if cursor.fetchone():
+        cursor.close()
+        conn.close()
+        return jsonify({"error": "Friend request already sent"}), 400
+
+    # Insert the new friend request
+    cursor.execute(
+        "INSERT INTO friend_requests (sender_id, receiver_id) VALUES (%s, %s)",
+        (sender_id, friend_id),
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return jsonify({"success": True})
+
+
 if __name__ == "__main__":
     app.run(debug=True)
