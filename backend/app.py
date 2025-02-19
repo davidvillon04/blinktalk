@@ -559,7 +559,7 @@ def send_message():
     conn = get_db_connection()
     if not conn:
         return jsonify({"error": "Database connection error"}), 500
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
     # Insert the new message
     insert_sql = """
@@ -570,9 +570,7 @@ def send_message():
     conn.commit()
     new_id = cursor.lastrowid
 
-    # ================================
-    # Update last_interaction
-    # ================================
+    # Update the last_interaction timestamp for the friendship
     update_sql = """
         UPDATE friendships
         SET last_interaction = NOW()
