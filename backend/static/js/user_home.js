@@ -165,17 +165,32 @@ function sendFriendRequest() {
  * 4. Open Requests UI (pending friend requests)
  **************************************/
 function openRequests() {
+   // 1) Clear or change the header
+   const chatHeader = document.getElementById("chatHeader");
+   chatHeader.innerHTML = "<h2>Requests</h2>";
+
+   // 2) Clear the messages area or show "Loading..."
+   const chatMessagesDiv = document.getElementById("chatMessages");
+   chatMessagesDiv.innerHTML = "Loading friend requests...";
+
+   // 3) Optionally hide/clear the chat footer if you want
+   const chatFooter = document.getElementById("chatFooter");
+   chatFooter.innerHTML = ""; // or hide it
+
+   // 4) Now fetch the requests
    fetch("/get_friend_requests")
       .then((response) => response.json())
       .then((data) => {
          if (data.error) {
             console.error("Error fetching friend requests:", data.error);
+            chatMessagesDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
             return;
          }
          buildRequestsUI(data);
       })
       .catch((error) => {
          console.error("Error fetching friend requests:", error);
+         chatMessagesDiv.innerHTML = `<p style="color:red;">Error loading requests</p>`;
       });
 }
 
@@ -211,7 +226,6 @@ function buildRequestsUI(requests) {
       });
    }
    html += "</div>";
-   document.getElementById("mainContent").innerHTML = html;
 }
 
 function acceptRequestAjax(requestId, btn) {
