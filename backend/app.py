@@ -597,13 +597,6 @@ def send_message():
 
 @app.route("/get_messages", methods=["GET"])
 def get_messages():
-    """
-    Returns all messages between the logged-in user and the specified friend.
-    Expects a query param ?friend_id=XYZ (the user's ID).
-
-    Example request: GET /get_messages?friend_id=7
-    Response: { "messages": [ {...}, {...}, ... ] }
-    """
     # 1. Check if user is logged in
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
@@ -630,6 +623,7 @@ def get_messages():
             m.content,
             m.created_at,
             sender.username AS sender_username
+            sender.profile_pic AS sender_profile_pic
         FROM messages m
         JOIN users sender ON sender.id = m.sender_id
         WHERE (m.sender_id = %s AND m.receiver_id = %s)
