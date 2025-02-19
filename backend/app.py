@@ -147,7 +147,6 @@ def login():
 
         # 2. Check if fields are empty
         if not email_or_username or not password:
-            # We'll store the error in form_data and re-render login.html
             form_data["error_login"] = "Please fill out all fields."
             return render_template("login.html", form_data=form_data)
 
@@ -175,8 +174,7 @@ def login():
             conn.close()
             return render_template("login.html", form_data=form_data)
 
-        # 5. Compare the plain-text password
-        # (For production, you'd store a hashed password and use a library like bcrypt to check.)
+        # 5. Compare the plain-text password (use hashing in production!)
         if password != user_row["password"]:
             form_data["error_login"] = "Invalid username/email or password."
             cursor.close()
@@ -185,7 +183,6 @@ def login():
 
         # 6. If valid, store user info in session
         session["user_id"] = user_row["id"]
-        # (Optionally store session["username"] = user_row["username"] if you want to greet by name)
 
         cursor.close()
         conn.close()
@@ -251,7 +248,7 @@ def new_user():
 
         file = request.files["profile_pic"]
         if file.filename == "":
-            flash("Please upload a file before uploading!")
+            flash("Please select a file before uploading!")
             return redirect(request.url)
 
         if file and allowed_file(file.filename):
@@ -280,7 +277,6 @@ def new_user():
 
 @app.route("/user_home")
 def user_home():
-    # If not logged in, redirect:
     if "user_id" not in session:
         flash("Please log in first.")
         return redirect(url_for("login"))
@@ -295,6 +291,7 @@ def user_home():
     username = row["username"] if row else "User"
     profile_pic = row.get("profile_pic", None) if row else None
 
+    # Fetch the friends list
     cursor.execute(
         """
         SELECT u.id, u.username, u.profile_pic
@@ -302,7 +299,7 @@ def user_home():
         JOIN users u ON (u.id = f.user1_id OR u.id = f.user2_id)
         WHERE (f.user1_id = %s OR f.user2_id = %s) AND u.id != %s
         ORDER BY u.username ASC
-    """,
+        """,
         (user_id, user_id, user_id),
     )
     friends = cursor.fetchall()
@@ -310,7 +307,9 @@ def user_home():
     cursor.close()
     conn.close()
 
-    return render_template("user_home.html", username=username, profile_pic=profile_pic)
+    return render_template(
+        "user_home.html", username=username, profile_pic=profile_pic, friends=friends
+    )
 
 
 # Endpoint to retrieve pending friend requests for the logged-in user
@@ -329,7 +328,7 @@ def get_friend_requests():
         JOIN users u ON fr.sender_id = u.id
         WHERE fr.receiver_id = %s AND fr.status = 'pending'
         ORDER BY u.username ASC
-    """,
+        """,
         (user_id,),
     )
     requests_list = cursor.fetchall()
@@ -350,11 +349,14 @@ def accept_request():
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Mark the request as accepted
     cursor.execute(
         "UPDATE friend_requests SET status = 'accepted' WHERE id = %s AND receiver_id = %s",
         (request_id, user_id),
     )
     conn.commit()
+
+    # Now we add a row to the `friendships` table
     cursor.execute("SELECT sender_id FROM friend_requests WHERE id = %s", (request_id,))
     row = cursor.fetchone()
     if row:
@@ -366,6 +368,7 @@ def accept_request():
             (user1, user2),
         )
         conn.commit()
+
     cursor.close()
     conn.close()
 
@@ -424,7 +427,7 @@ def send_friend_request():
     # Check if a pending friend request already exists
     cursor.execute(
         """
-        SELECT id FROM friend_requests 
+        SELECT id FROM friend_requests
         WHERE sender_id = %s AND receiver_id = %s AND status = 'pending'
         """,
         (sender_id, friend_id),
@@ -446,20 +449,28 @@ def send_friend_request():
     return jsonify({"success": True})
 
 
+# =============================
+# NEW ENDPOINT: /get_friends
+# =============================
 @app.route("/get_friends", methods=["GET"])
 def get_friends():
+    """Return the updated friend list as JSON."""
     if "user_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
     user_id = session["user_id"]
 
     conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "Database connection error"}), 500
     cursor = conn.cursor(dictionary=True)
+
     cursor.execute(
         """
         SELECT u.id, u.username, u.profile_pic
         FROM friendships f
         JOIN users u ON (u.id = f.user1_id OR u.id = f.user2_id)
-        WHERE (f.user1_id = %s OR f.user2_id = %s) AND u.id != %s
+        WHERE (f.user1_id = %s OR f.user2_id = %s)
+        AND u.id != %s
         ORDER BY u.username ASC
         """,
         (user_id, user_id, user_id),
