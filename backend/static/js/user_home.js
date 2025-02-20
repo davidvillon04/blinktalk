@@ -10,6 +10,23 @@ socket.on("receive_message", (msgData) => {
    appendOneMessage(msgData);
 });
 
+socket.on("user_typing", (data) => {
+   // Show the typing indicator with the user's name
+   const typingIndicator = document.getElementById("typingIndicator");
+   if (typingIndicator) {
+      typingIndicator.textContent = `${data.username} is typing...`;
+      typingIndicator.style.display = "block";
+   }
+});
+
+socket.on("user_stop_typing", (data) => {
+   // Hide the typing indicator
+   const typingIndicator = document.getElementById("typingIndicator");
+   if (typingIndicator) {
+      typingIndicator.style.display = "none";
+   }
+});
+
 function getRoomName(userId1, userId2) {
    // Ensure the room name is the same regardless of order:
    return "chat_" + Math.min(userId1, userId2) + "_" + Math.max(userId1, userId2);
@@ -381,19 +398,6 @@ function openChat(friendId, friendName) {
    const chatMessagesDiv = document.getElementById("chatMessages");
    chatMessagesDiv.innerHTML = "Loading messages...";
 
-   const chatFooter = document.getElementById("chatFooter");
-   chatFooter.innerHTML = `
-      <input
-         type="text"
-         id="chatInputField"
-         placeholder="Type your message..."
-         onkeydown="handleChatKeyDown(event)"
-      />
-      <button class="send-button" onclick="sendChatMessage()">
-         <i class="fa-solid fa-paper-plane"></i>
-      </button>
-   `;
-
    // 3) Store these globally so sendChatMessage() knows whom to message
    window.currentChatFriendId = friendId;
    window.currentChatFriendName = friendName;
@@ -437,6 +441,25 @@ function handleChatKeyDown(event) {
       event.preventDefault();
       sendChatMessage();
    }
+}
+
+let typingTimeout;
+
+function handleTyping() {
+   // Emit the "typing" event with room and username.
+   socket.emit("typing", {
+      room: window.currentChatRoom,
+      username: CURRENT_USERNAME,
+   });
+
+   // Clear any existing timeout and set a new one
+   clearTimeout(typingTimeout);
+   typingTimeout = setTimeout(() => {
+      socket.emit("stop_typing", {
+         room: window.currentChatRoom,
+         username: CURRENT_USERNAME,
+      });
+   }, 1500); // 1.5 seconds after the last input
 }
 
 function sendChatMessage() {

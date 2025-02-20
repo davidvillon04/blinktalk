@@ -658,5 +658,22 @@ def handle_send_message(data):
     socketio.emit("receive_message", new_msg_row, to=room)
 
 
+@socketio.on("typing")
+def handle_typing(data):
+    room = data.get("room")
+    username = data.get("username", "Unknown")
+    # Broadcast to others in the room that this user is typing.
+    emit("user_typing", {"username": username}, to=room, include_self=False)
+
+
+@socketio.on("stop_typing")
+def handle_stop_typing(data):
+    room = data.get("room")
+    username = data.get("username", "Unknown")
+    # Broadcast to others in the room to clear the typing indicator.
+    emit("user_stop_typing", {"username": username}, to=room, include_self=False)
+
+
+# MUST BE FINAL BLOCK
 if __name__ == "__main__":
     socketio.run(app, debug=True)

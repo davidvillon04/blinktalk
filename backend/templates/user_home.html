@@ -64,14 +64,27 @@
       </div>
 
       <!-- The footer with the text box pinned at the bottom -->
-      <div class="chat-footer" id="chatFooter">
-         <input
-            type="text"
-            id="chatInputField"
-            placeholder="Type your message..."
-            onkeydown="handleChatKeyDown(event)"
-         />
-         <button onclick="sendChatMessage()">Send</button>
+      <div class="chat-footer">
+         <!-- Typing indicator row -->
+         <div
+            id="typingIndicator"
+            style="display: none; font-size: 0.9rem; color: #aaa; margin-bottom: 6px"
+         ></div>
+
+         <!-- Input + Button row -->
+         <div class="input-row">
+            <input
+               type="text"
+               id="chatInputField"
+               placeholder="Type your message..."
+               onkeydown="handleChatKeyDown(event)"
+               oninput="handleTyping()"
+               style="flex: 1"
+            />
+            <button class="send-button" onclick="sendChatMessage()">
+               <i class="fa-solid fa-paper-plane"></i>
+            </button>
+         </div>
       </div>
    </div>
 
