@@ -484,6 +484,7 @@ function sendChatMessage() {
 
    // Clear the input field and re-focus it
    inputField.value = "";
+   inputField.style.height = "40px";
    inputField.focus();
 }
 
@@ -604,4 +605,19 @@ function parseMySQLDateTime(mysqlDateStr) {
       return null;
    }
    return dateObj;
+}
+
+function autoResize(textarea) {
+   // Reset height to let the textarea shrink if needed
+   textarea.style.height = "auto";
+   const newHeight = textarea.scrollHeight;
+   // If new height is within our max-height limit, hide the scrollbar
+   if (newHeight <= 200) {
+      textarea.style.overflowY = "hidden";
+      textarea.style.height = newHeight + "px";
+   } else {
+      // If content exceeds our max, fix the height and enable scrollbar
+      textarea.style.height = "200px";
+      textarea.style.overflowY = "auto";
+   }
 }

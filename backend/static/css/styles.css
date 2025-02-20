@@ -445,10 +445,8 @@ meter::-moz-meter-bar {
 .chat-footer {
     display: flex;
     flex-direction: column; /* one item on top (typing indicator), one item below (input row) */
-    padding: 8px;
-    gap: 6px; /* vertical gap between typing indicator & input row */
+    padding: 4px;
     flex-shrink: 0; /* so it won't shrink away if the container is too small */
-    margin-top: 1rem; /* optional space above */
   }
 .chat-footer input {
     flex: 1;
@@ -473,8 +471,8 @@ meter::-moz-meter-bar {
   }
 
 #typingIndicator {
-    font-size: 0.9rem;
-    color: #aaa;
+    font-size: 1rem;
+    color: #dadada;
     display: none; /* hidden by default, shown by JS when user_typing event arrives */
   }
 
@@ -613,5 +611,43 @@ meter::-moz-meter-bar {
   .send-button:hover {
     background-color: #b61c38; /* Slightly brighter red on hover */
   }
+  
+/* Ensure that long message content wraps within its container */
+.chat-message > div > div:last-child {
+    display: block;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    max-width: 100%;
+  }
+
+  /* Style for the multi-line chat input */
+  .chat-footer .input-row textarea {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 18px;        /* control the font size */
+    background: linear-gradient(130deg, #b8a13d98, #c5b65dc4);
+    color: white;
+    min-height: 18px;       /* shorter baseline */
+    line-height: 18px;      /* match the min-height for a single line */
+    max-height: 120px;      /* can still grow up to this */
+    padding: 2px 6px;       /* small vertical padding to keep it short */
+    resize: none;           /* prevent manual resizing */
+    overflow-y: hidden;     /* hide scroll until needed */
+    border: none;
+    border-radius: 4px;
+    box-sizing: border-box; /* ensures padding doesn’t expand total size unexpectedly */
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  /* In your styles.css, inside or after the .chat-footer .input-row textarea rules: */
+.chat-footer .input-row textarea::placeholder {
+    color: #ffffff;     /* White placeholder text */
+    opacity: 0.7;    /* Adjust the opacity if you like a slightly lighter look */
+  }
+  
+  
+  
+  
   
   
