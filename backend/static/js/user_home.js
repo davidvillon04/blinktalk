@@ -1,5 +1,20 @@
 // user_home.js
 
+// Initialize the socket connection
+const socket = io(); // This connects to the same host that served the page
+
+// Listen for new messages from the server
+socket.on("receive_message", (msgData) => {
+   console.log("New message received:", msgData);
+   // Call a function to append the new message to your chat UI
+   appendOneMessage(msgData);
+});
+
+function getRoomName(userId1, userId2) {
+   // Ensure the room name is the same regardless of order:
+   return "chat_" + Math.min(userId1, userId2) + "_" + Math.max(userId1, userId2);
+}
+
 /**************************************
  * 1. Open Add Friend UI
  **************************************/
@@ -383,48 +398,34 @@ function openChat(friendId, friendName) {
    window.currentChatFriendId = friendId;
    window.currentChatFriendName = friendName;
 
+   // 4) Determine the room name using the helper function:
+   const roomName = getRoomName(CURRENT_USER_ID, friendId);
+   // Save the room name globally if needed
+   window.currentChatRoom = roomName;
+
+   // 5) Emit an event to join the chat room:
+   socket.emit("join_chat", {
+      room: roomName,
+      username: CURRENT_USERNAME,
+   });
+
    // 4) Fetch existing messages
    fetch(`/get_messages?friend_id=${friendId}`)
       .then((res) => res.json())
       .then((data) => {
          if (data.error) {
-            chatMessagesDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+            chatMessagesDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
             return;
          }
-         // Build message HTML
          let html = "";
          data.messages.forEach((msg) => {
-            console.log("rawTimestamp:", msg.created_at);
-
-            const who = msg.sender_id === CURRENT_USER_ID ? "You" : msg.sender_username;
-            const pic = msg.sender_profile_pic || "/static/profile_pics/default.png";
-
-            // Set the date
-            const dateObj = new Date(msg.created_at);
-
-            // 2) Format that Date:
-            const timestampLabel = formatMessageTimestamp(dateObj);
-
-            html += `
-               <div class="chat-message" style="display:flex; margin-bottom:0.5rem;">
-                  <img src="${pic}" style="width:32px; height:32px; border-radius:50%; margin-right:8px;"/>
-                  <div>
-                     <strong>${who}</strong>
-                     <span style="opacity:0.8; font-size:0.8rem; margin-left:8px;">${timestampLabel}</span>
-                     <div>${msg.content}</div>
-                  </div>
-               </div>
-            `;
+            html += buildMessageHTML(msg);
          });
          chatMessagesDiv.innerHTML = html;
-         // Scroll to bottom
          chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
 
-         // Now the input definitely exists:
          const inputEl = document.getElementById("chatInputField");
-         if (inputEl) {
-            inputEl.focus();
-         }
+         if (inputEl) inputEl.focus();
       })
       .catch((err) => {
          console.error("Error loading messages:", err);
@@ -438,7 +439,6 @@ function handleChatKeyDown(event) {
    }
 }
 
-// 2. Function to send a message using /send_message
 function sendChatMessage() {
    const inputField = document.getElementById("chatInputField");
    if (!inputField) return;
@@ -446,66 +446,50 @@ function sendChatMessage() {
    const messageText = inputField.value.trim();
    if (!messageText) return;
 
-   // We stored friend info when we last opened a chat
+   // We stored friend info and room name in openChat()
    const friendId = window.currentChatFriendId;
-   const friendName = window.currentChatFriendName;
+   const roomName = window.currentChatRoom;
 
-   fetch("/send_message", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-         friend_id: friendId,
-         message: messageText,
-      }),
-   })
-      .then((res) => res.json())
-      .then((data) => {
-         if (data.error) {
-            console.error("Error sending message:", data.error);
-            return;
-         }
-         // success => clear input
-         inputField.value = "";
+   // Emit a "send_message" event so the server can insert into DB and broadcast
+   socket.emit("send_message", {
+      room: roomName,
+      content: messageText,
+      sender_id: CURRENT_USER_ID,
+      sender_username: CURRENT_USERNAME,
+      friend_id: friendId, // So server knows the receiver
+   });
 
-         // 2. data.message is the newly inserted row from the DB
-         const newMsg = data.message;
-         if (!newMsg) {
-            console.error("No new message object returned from server!");
-            return;
-         }
-         // 3. Append the new message to the bottom of the chat
-         appendOneMessage(newMsg);
-
-         updateFriendList();
-      })
-      .catch((err) => {
-         console.error("Error in sendChatMessage:", err);
-      })
-
-      .finally(() => {
-         // AFTER it’s done, re-focus the input
-         const refocusInput = document.getElementById("chatInputField");
-         if (refocusInput) {
-            refocusInput.focus();
-         }
-      });
+   // Clear the input field and re-focus it
+   inputField.value = "";
+   inputField.focus();
 }
 
+// 5) Function that builds message HTML or appends it
 function appendOneMessage(msg) {
-   // The container
    const chatMessagesDiv = document.getElementById("chatMessages");
    if (!chatMessagesDiv) return;
 
-   // Decide who is "You" vs friend
+   const html = buildMessageHTML(msg);
+   chatMessagesDiv.insertAdjacentHTML("beforeend", html);
+   chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+}
+
+// 6) Helper to build the HTML for a single message
+function buildMessageHTML(msg) {
+   // If your server sets .sender_id to CURRENT_USER_ID for your messages:
    const who = msg.sender_id === CURRENT_USER_ID ? "You" : msg.sender_username;
    const pic = msg.sender_profile_pic || "/static/profile_pics/default.png";
 
-   // Convert the date/time from e.g. "Wed, 19 Feb 2025 02:00:41 GMT"
-   const dateObj = new Date(msg.created_at);
-   const timestampLabel = formatMessageTimestamp(dateObj);
+   // For the date/time:
+   let timestampLabel = "Invalid Date";
+   if (msg.created_at) {
+      const dateObj = new Date(msg.created_at);
+      if (!isNaN(dateObj)) {
+         timestampLabel = formatMessageTimestamp(dateObj);
+      }
+   }
 
-   // Build the snippet
-   const msgHtml = `
+   return `
      <div class="chat-message" style="display:flex; margin-bottom:0.5rem;">
        <img
          src="${pic}"
@@ -520,12 +504,6 @@ function appendOneMessage(msg) {
        </div>
      </div>
    `;
-
-   // Insert at the bottom
-   chatMessagesDiv.insertAdjacentHTML("beforeend", msgHtml);
-
-   // Scroll down
-   chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
 }
 
 /**************************************

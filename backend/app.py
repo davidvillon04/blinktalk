@@ -8,6 +8,8 @@ from flask import (
     jsonify,
     session,
 )
+from flask_socketio import SocketIO, emit, join_room, leave_room
+
 import mysql.connector
 from mysql.connector import errorcode
 from datetime import date
@@ -16,6 +18,7 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for flash messages
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Database configuration
 db_config = {
@@ -538,70 +541,6 @@ def get_friends():
     return jsonify({"friends": rows})
 
 
-@app.route("/send_message", methods=["POST"])
-def send_message():
-
-    # 1. Ensure the user is logged in
-    if "user_id" not in session:
-        return jsonify({"error": "Not logged in"}), 401
-
-    # 2. Parse JSON data from the client
-    data = request.get_json()
-    friend_id = data.get("friend_id")
-    message_text = data.get("message")
-    sender_id = session["user_id"]
-
-    # 3. Validate
-    if not friend_id or not message_text:
-        return jsonify({"error": "Missing friend_id or message"}), 400
-
-    # 4. Connect to DB and insert
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"error": "Database connection error"}), 500
-    cursor = conn.cursor(dictionary=True)
-
-    # Insert the new message
-    insert_sql = """
-        INSERT INTO messages (sender_id, receiver_id, content)
-        VALUES (%s, %s, %s)
-    """
-    cursor.execute(insert_sql, (sender_id, friend_id, message_text))
-    conn.commit()
-    new_id = cursor.lastrowid
-
-    # Update the last_interaction timestamp for the friendship
-    update_sql = """
-        UPDATE friendships
-        SET last_interaction = NOW()
-        WHERE (user1_id = %s AND user2_id = %s)
-           OR (user1_id = %s AND user2_id = %s)
-    """
-    cursor.execute(update_sql, (sender_id, friend_id, friend_id, sender_id))
-    conn.commit()
-
-    cursor.execute(
-        """
-        SELECT
-            m.id, m.sender_id, m.receiver_id, m.content, m.created_at,
-            sender.username AS sender_username,
-            sender.profile_pic AS sender_profile_pic
-        FROM messages m
-        JOIN users sender ON sender.id = m.sender_id
-        WHERE m.id = %s
-        """,
-        (new_id,),
-    )
-
-    new_msg_row = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
-
-    # 5. Return success JSON
-    return jsonify({"success": True, "message": new_msg_row})
-
-
 @app.route("/get_messages", methods=["GET"])
 def get_messages():
     # 1. Check if user is logged in
@@ -643,5 +582,81 @@ def get_messages():
     return jsonify({"messages": rows})
 
 
+@socketio.on("join_chat")
+def handle_join_chat(data):
+
+    room = data["room"]
+    username = data.get("username", "Unknown User")
+    join_room(room)
+    print(f"{username} joined room {room}")
+
+
+@socketio.on("send_message")
+def handle_send_message(data):
+    room = data["room"]
+    content = data["content"]
+    sender_id = data.get("sender_id")
+    sender_username = data.get("sender_username", "Unknown")
+    friend_id = data.get("friend_id")
+
+    # 1) Insert into the DB
+    conn = get_db_connection()
+    if not conn:
+        print("DB connection error in send_message socket event")
+        return
+
+    cursor = conn.cursor(dictionary=True)
+
+    # Insert the new message
+    insert_sql = """
+        INSERT INTO messages (sender_id, receiver_id, content)
+        VALUES (%s, %s, %s)
+    """
+    cursor.execute(insert_sql, (sender_id, friend_id, content))
+    conn.commit()
+    new_id = cursor.lastrowid
+
+    # 3) Optionally update 'last_interaction'
+    update_sql = """
+        UPDATE friendships
+        SET last_interaction = NOW()
+        WHERE (user1_id = %s AND user2_id = %s)
+          OR (user1_id = %s AND user2_id = %s)
+    """
+    cursor.execute(update_sql, (sender_id, friend_id, friend_id, sender_id))
+    conn.commit()
+
+    # 4) Fetch the newly inserted row, which has created_at, profile_pic, etc.
+    cursor.execute(
+        """
+        SELECT
+            m.id, m.sender_id, m.receiver_id, m.content, m.created_at,
+            sender.username AS sender_username,
+            sender.profile_pic AS sender_profile_pic
+        FROM messages m
+        JOIN users sender ON sender.id = m.sender_id
+        WHERE m.id = %s
+        """,
+        (new_id,),
+    )
+    new_msg_row = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    # Convert datetime to string:
+    import datetime
+
+    if new_msg_row and "created_at" in new_msg_row:
+        if isinstance(new_msg_row["created_at"], datetime.datetime):
+            # ISO format (e.g. "2025-02-19T02:00:41.123456")
+            new_msg_row["created_at"] = new_msg_row["created_at"].isoformat()
+            # or custom format:
+            # new_msg_row["created_at"] = new_msg_row["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+
+    # 5) Now broadcast the full message row to the room
+    socketio.emit("receive_message", new_msg_row, to=room)
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app, debug=True)
