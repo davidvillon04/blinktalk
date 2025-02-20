@@ -16,7 +16,7 @@ function createWindow() {
    });
 
    // Load your Flask app's URL
-   mainWindow.loadURL("http://localhost:5000");
+   mainWindow.loadURL("http://localhost:5000/login");
 
    mainWindow.on("closed", () => {
       mainWindow = null;
