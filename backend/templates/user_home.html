@@ -6,9 +6,23 @@
    const CURRENT_USERNAME = "{{ username|safe }}";
 </script>
 
+<script src="{{ url_for('static', filename='js/user_home.js') }}"></script>
+<script>
+   document.addEventListener("DOMContentLoaded", () => {
+      // Make an initial call to fetch and display the correct # of pending requests
+      updateRequestCount();
+      homePage();
+   });
+</script>
+
 <div class="app-container">
    <!-- Left Column: Requests, Friends List & User Profile -->
    <div class="friends-column">
+      <!-- Header with App Name -->
+      <div class="app-header">
+         <h1 onclick="homePage()" style="cursor: pointer">BlinkTalk</h1>
+      </div>
+
       <!-- Requests Header -->
       <div class="requests-header" onclick="openRequests()" style="cursor: pointer">
          <h2>Requests <span class="request-count" id="requestCount">0</span></h2>
@@ -53,18 +67,13 @@
    <!-- Center Column: Chat or Requests UI -->
    <div class="chat-column">
       <!-- Chat header always here, at top -->
-      <div class="chat-header" id="chatHeader">
-         <!-- We'll fill this dynamically with openChat() -->
-         <h2>Welcome!</h2>
-      </div>
+      <div class="chat-header" id="chatHeader"></div>
 
       <!-- The main messages area, flex: 1, scrollable -->
-      <div class="chat-content" id="chatMessages">
-         <p>Select a friend to start chatting!</p>
-      </div>
+      <div class="chat-content" id="chatMessages"></div>
 
       <!-- The footer with the text box pinned at the bottom -->
-      <div class="chat-footer">
+      <div class="chat-footer" id="chatFooter" style="display: none">
          <!-- Typing indicator row -->
          <div id="typingIndicator"></div>
 
@@ -90,14 +99,4 @@
       <p>This area could show upcoming events, friend statuses, or other data.</p>
    </div>
 </div>
-
-<!-- Reference external JavaScript file for user_home functionality -->
-<script src="{{ url_for('static', filename='js/user_home.js') }}"></script>
-
-<script>
-   document.addEventListener("DOMContentLoaded", () => {
-      // Make an initial call to fetch and display the correct # of pending requests
-      updateRequestCount();
-   });
-</script>
 {% endblock %}

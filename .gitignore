@@ -1,0 +1,10 @@
+# .gitignore
+
+# Node modules
+node_modules/
+
+# Electron builds
+dist/
+
+# If you have a Python virtual environment
+venv/

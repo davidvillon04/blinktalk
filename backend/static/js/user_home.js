@@ -1,13 +1,45 @@
 // user_home.js
+/* global CURRENT_USER_ID, CURRENT_USERNAME */
 
 // Initialize the socket connection
 const socket = io(); // This connects to the same host that served the page
-const notificationSound = new Audio("/static/sounds/notify.mp3");
+const notificationSound = new Audio("/static/sounds/message_notify.mp3");
 
-// Listen for new messages from the server
+window.currentChatFriendId = null;
+const unreadCounts = {}; // keys: friend IDs, values: counts
+let typingTimeout;
+
+// Unlock audio on first user interaction.
+document.addEventListener("click", function unlockAudio() {
+   notificationSound.play().catch(() => {}); // try to play then immediately pause
+   notificationSound.pause();
+   document.removeEventListener("click", unlockAudio);
+});
+
+// Join a personal room for notifications (e.g., "user_1" for user with ID 1)
+socket.emit("join_personal", { room: "user_" + CURRENT_USER_ID });
+
 socket.on("receive_message", (msgData) => {
-   console.log("New message received:", msgData);
-   // Call a function to append the new message to your chat UI
+   const senderId = Number(msgData.sender_id);
+   const currentUserId = Number(CURRENT_USER_ID);
+
+   // Convert both IDs to numbers before comparing.
+   if (senderId !== currentUserId) {
+      // 1) Update unread counts
+      unreadCounts[senderId] = (unreadCounts[senderId] || 0) + 1;
+
+      // 2) Update the friend list badges in the left column
+      updateFriendList();
+
+      // 3) If we’re on the home screen (meaning no chat is open),
+      //    then re-render the home screen with the updated unread lines:
+      if (!window.currentChatFriendId) {
+         updateHomeMessages();
+      }
+      // Optionally play the sound:
+      notificationSound.play().catch((err) => console.error("Sound play error:", err));
+      return;
+   }
    appendOneMessage(msgData);
 });
 
@@ -37,6 +69,7 @@ function getRoomName(userId1, userId2) {
  * 1. Open Add Friend UI
  **************************************/
 function openAddFriend() {
+   console.log("openAddFriend called");
    // 1) Set the chat header
    const chatHeader = document.getElementById("chatHeader");
    chatHeader.innerHTML = "<h2>Add Friend</h2>";
@@ -45,7 +78,7 @@ function openAddFriend() {
    const chatMessagesDiv = document.getElementById("chatMessages");
    chatMessagesDiv.innerHTML = "";
 
-   // 3) Optionally remove or hide the footer
+   // 3) Remove or hide the footer
    const chatFooter = document.getElementById("chatFooter");
    chatFooter.innerHTML = "";
 
@@ -357,16 +390,15 @@ function updateFriendList() {
          let newHTML = "";
          data.friends.forEach((friend) => {
             const pic = friend.profile_pic || "/static/profile_pics/default.png";
+            // Convert friend.id to a string for consistent lookup:
+            const count = unreadCounts[String(friend.id)] || 0;
+            const badge = count > 0 ? `<span class="unread-badge">${count}</span>` : "";
             newHTML += `
-               <li id="friendLi${friend.id}" onclick="openChat(${friend.id}, '${friend.username}')">
-                  <img
-                     class="friend-avatar"
-                     src="${pic}"
-                     alt="${friend.username} Avatar"
-                  />
-                  ${friend.username}
-               </li>
-            `;
+           <li id="friendLi${friend.id}" onclick="openChat(${friend.id}, '${friend.username}')">
+             <img class="friend-avatar" src="${pic}" alt="${friend.username} Avatar" />
+             ${friend.username} ${badge}
+           </li>
+         `;
          });
 
          friendListContainer.innerHTML = newHTML;
@@ -380,6 +412,9 @@ function updateFriendList() {
  * 7. Open a chat with a friend
  **************************************/
 function openChat(friendId, friendName) {
+   unreadCounts[friendId] = 0;
+   updateFriendList();
+
    // 1. Remove the "active" class from all friend <li> elements
    document.querySelectorAll(".friend-list li").forEach((li) => {
       li.classList.remove("active");
@@ -414,6 +449,12 @@ function openChat(friendId, friendName) {
       username: CURRENT_USERNAME,
    });
 
+   // Show the chat footer when a chat is open.
+   const chatfooter = document.getElementById("chatFooter");
+   if (chatfooter) {
+      chatfooter.style.display = "flex"; // or "block" depending on your layout
+   }
+
    // 4) Fetch existing messages
    fetch(`/get_messages?friend_id=${friendId}`)
       .then((res) => res.json())
@@ -435,6 +476,26 @@ function openChat(friendId, friendName) {
       .catch((err) => {
          console.error("Error loading messages:", err);
       });
+
+   const chatFooter = document.getElementById("chatFooter");
+   chatFooter.innerHTML = `
+      <!-- Typing indicator row -->
+      <div id="typingIndicator"></div>
+
+      <!-- Input + Button row -->
+      <div class="input-row">
+         <textarea
+            id="chatInputField"
+            placeholder="Type your message..."
+            onkeydown="handleChatKeyDown(event)"
+            oninput="handleTyping(); autoResize(this)"
+            style="flex: 1"
+         ></textarea>
+         <button class="send-button" onclick="sendChatMessage()">
+            <i class="fa-solid fa-paper-plane"></i>
+         </button>
+      </div>
+   `;
 }
 
 function handleChatKeyDown(event) {
@@ -443,8 +504,6 @@ function handleChatKeyDown(event) {
       sendChatMessage();
    }
 }
-
-let typingTimeout;
 
 function handleTyping() {
    // Emit the "typing" event with room and username.
@@ -621,4 +680,43 @@ function autoResize(textarea) {
       textarea.style.height = "200px";
       textarea.style.overflowY = "auto";
    }
+}
+
+function homePage() {
+   // Reset the chat header to the default welcome message.
+   const chatHeader = document.getElementById("chatHeader");
+   chatHeader.innerHTML = "<h2>Welcome!</h2>";
+
+   updateHomeMessages();
+
+   // Hide the chat footer (input area) without resetting unreadCounts.
+   const chatFooter = document.getElementById("chatFooter");
+   if (chatFooter) {
+      chatFooter.style.display = "none";
+   }
+
+   window.currentChatFriendId = null;
+}
+
+function updateHomeMessages() {
+   // Instead of replacing the chat content with a default prompt,
+   // build a list of chats that have unread messages.
+   const chatMessagesDiv = document.getElementById("chatMessages");
+   let html = "";
+
+   // For each friend with unread messages, display a summary.
+   for (const friendId in unreadCounts) {
+      if (unreadCounts[friendId] > 0) {
+         // You could also store the latest unread message content in a separate object
+         // Here we'll simply show "X unread messages" as a placeholder.
+         html += `<div class="unread-summary">
+                  <strong>Friend ${friendId}</strong> - ${unreadCounts[friendId]} unread message(s)
+                </div>`;
+      }
+   }
+   // If no unread messages, show a default prompt.
+   if (html === "") {
+      html = "<p>Select a friend to start chatting!</p>";
+   }
+   chatMessagesDiv.innerHTML = html;
 }

@@ -651,11 +651,13 @@ def handle_send_message(data):
         if isinstance(new_msg_row["created_at"], datetime.datetime):
             # ISO format (e.g. "2025-02-19T02:00:41.123456")
             new_msg_row["created_at"] = new_msg_row["created_at"].isoformat()
-            # or custom format:
-            # new_msg_row["created_at"] = new_msg_row["created_at"].strftime("%Y-%m-%d %H:%M:%S")
 
     # 5) Now broadcast the full message row to the room
     socketio.emit("receive_message", new_msg_row, to=room)
+
+    # Emit to the recipient's personal room for notifications
+    recipient_personal_room = "user_" + str(friend_id)
+    socketio.emit("receive_message", new_msg_row, to=recipient_personal_room)
 
 
 @socketio.on("typing")
@@ -672,6 +674,14 @@ def handle_stop_typing(data):
     username = data.get("username", "Unknown")
     # Broadcast to others in the room to clear the typing indicator.
     emit("user_stop_typing", {"username": username}, to=room, include_self=False)
+
+
+@socketio.on("join_personal")
+def handle_join_personal(data):
+    room = data.get("room")
+    if room:
+        join_room(room)
+        print(f"Client joined personal room: {room}")
 
 
 # MUST BE FINAL BLOCK
