@@ -2,6 +2,7 @@
 
 // Initialize the socket connection
 const socket = io(); // This connects to the same host that served the page
+const notificationSound = new Audio("/static/sounds/notify.mp3");
 
 // Listen for new messages from the server
 socket.on("receive_message", (msgData) => {
