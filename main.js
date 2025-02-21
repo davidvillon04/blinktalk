@@ -34,10 +34,10 @@ function startFlask() {
 
    // Make sure you set FLASK_APP=app.py (or your main Flask file)
    // and any other environment variables needed.
-   flaskProcess = spawn(pythonPath, ["run"], {
+   flaskProcess = spawn(pythonPath, ["app.py"], {
       cwd: path.join(__dirname, "backend"), // set working directory to where your app.py is
       shell: true,
-      env: Object.assign({}, process.env, { FLASK_APP: "app.py", FLASK_ENV: "development" }),
+      env: Object.assign({}, process.env, { FLASK_ENV: "development" }),
    });
 
    flaskProcess.stdout.on("data", (data) => {

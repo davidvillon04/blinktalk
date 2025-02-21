@@ -27,6 +27,7 @@
     "productName": "BlinkTalk",
     "files": [
       "backend/**",
+      "python/**",
       "!backend/templates/index.html",
       "main.js"
     ],
