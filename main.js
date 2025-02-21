@@ -29,12 +29,15 @@ function createWindow() {
 
 // Start the Flask server as a child process
 function startFlask() {
+   // Construct the path to the embedded python executable
+   const pythonPath = path.join(__dirname, "python", "python.exe"); // Adjust if needed
+
    // Make sure you set FLASK_APP=app.py (or your main Flask file)
    // and any other environment variables needed.
-   flaskProcess = spawn("flask", ["run"], {
-      cwd: __dirname, // your project root
+   flaskProcess = spawn(pythonPath, ["run"], {
+      cwd: path.join(__dirname, "backend"), // set working directory to where your app.py is
       shell: true,
-      env: Object.assign({}, process.env, { FLASK_APP: "backend/app.py" }),
+      env: Object.assign({}, process.env, { FLASK_APP: "app.py", FLASK_ENV: "development" }),
    });
 
    flaskProcess.stdout.on("data", (data) => {
