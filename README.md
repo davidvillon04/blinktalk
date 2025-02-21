@@ -1,2 +1,0 @@
-# blinktalk
-Chat Messaging App
