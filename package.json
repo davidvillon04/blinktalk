@@ -23,6 +23,9 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
+    "asarUnpack": [
+      "python/**"
+    ],
     "appId": "com.example.blinktalk",
     "productName": "BlinkTalk",
     "files": [
