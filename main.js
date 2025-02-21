@@ -1,6 +1,7 @@
 const { app, BrowserWindow } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
+const fs = require("fs");
 
 let mainWindow;
 let flaskProcess;
@@ -29,15 +30,23 @@ function createWindow() {
 
 // Start the Flask server as a child process
 function startFlask() {
-   // Construct the path to the embedded python executable
-   const pythonPath = path.join(__dirname, "python", "python.exe"); // Adjust if needed
+   const pythonExe = path.join(process.resourcesPath, "python", "python.exe");
+   const appPyPath = path.join(process.resourcesPath, "app", "backend", "app.py");
+   //            ^ note "app" in the path
 
-   // Make sure you set FLASK_APP=app.py (or your main Flask file)
-   // and any other environment variables needed.
-   flaskProcess = spawn(pythonPath, ["app.py"], {
-      cwd: path.join(__dirname, "backend"), // set working directory to where your app.py is
-      // shell: true,
-      env: Object.assign({}, process.env, { FLASK_ENV: "development" }),
+   console.log("pythonExe:", pythonExe);
+   console.log("appPyPath:", appPyPath);
+
+   console.log("Exists pythonExe?", fs.existsSync(pythonExe));
+   console.log("Exists appPyPath?", fs.existsSync(appPyPath));
+
+   flaskProcess = spawn(pythonExe, [appPyPath], {
+      cwd: path.join(process.resourcesPath, "app", "backend"),
+      //                                ^ likewise here
+      env: {
+         ...process.env,
+         FLASK_ENV: "development",
+      },
    });
 
    flaskProcess.stdout.on("data", (data) => {

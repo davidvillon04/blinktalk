@@ -19,6 +19,8 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for flash messages
 socketio = SocketIO(app, cors_allowed_origins="*")
+print("Flask: app.py has started!", flush=True)
+
 
 # Database configuration
 db_config = {

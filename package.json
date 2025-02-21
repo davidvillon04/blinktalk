@@ -1,6 +1,6 @@
 {
   "name": "blinktalk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Chat Messaging App",
   "main": "main.js",
   "scripts": {
@@ -23,14 +23,17 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "asarUnpack": [
-      "python/**"
+    "asar": false,
+    "extraResources": [
+      {
+        "from": "python",
+        "to": "python"
+      }
     ],
     "appId": "com.example.blinktalk",
     "productName": "BlinkTalk",
     "files": [
       "backend/**",
-      "python/**",
       "!backend/templates/index.html",
       "main.js"
     ],
