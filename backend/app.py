@@ -27,7 +27,7 @@ db_config = {
     "user": "davidv04",  # Your MySQL username
     "password": "Narwhals123",  # Your MySQL password
     "host": "blinktalk-db.ctckoqcim7bq.us-east-2.rds.amazonaws.com",
-    "database": "blinktalk_db",
+    "database": "blinktalk-db",
 }
 
 
