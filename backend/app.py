@@ -19,7 +19,11 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Needed for flash messages
 socketio = SocketIO(app, cors_allowed_origins="*")
-print("Flask: app.py has started!", flush=True)
+# Determine the directory where app.py is located.
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+# Explicitly set the template folder.
+app = Flask(__name__, template_folder=os.path.join(basedir, "templates"))
 
 
 # Database configuration
