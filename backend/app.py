@@ -123,9 +123,8 @@ def register():
             return render_template("register.html", form_data=form_data)
 
         # Insert new user into the table (for production, hash the password!)
-        insert_query = (
-            "INSERT INTO users (username, password, email, dob) VALUES (%s, %s, %s, %s)"
-        )
+        insert_query = "INSERT INTO users (username, password, email, dob) VALUES (%s, %s, %s, %s) RETURNING id"
+
         cursor.execute(insert_query, (lowercase_username, password, email, dob))
         new_user_id = cursor.fetchone()["id"]
         conn.commit()
