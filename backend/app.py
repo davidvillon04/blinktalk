@@ -10,11 +10,11 @@ from flask import (
 )
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
-import mysql.connector
-from mysql.connector import errorcode
 from datetime import date
 import os
 from werkzeug.utils import secure_filename
+import psycopg2
+import psycopg2.extras
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -27,21 +27,20 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # Determine the directory where app.py is located.
 
 
-# Database configuration
-db_config = {
-    "user": "davidv04",  # Your MySQL username
-    "password": "Narwhals123",  # Your MySQL password
-    "host": "blinktalk-db.ctckoqcim7bq.us-east-2.rds.amazonaws.com",
-    "database": "blinktalk-db",
-}
-
-
 def get_db_connection():
     try:
-        conn = mysql.connector.connect(**db_config)
+        conn = psycopg2.connect(
+            host="db.qlilmykbmctvueeuvosd.supabase.co",
+            port="5432",
+            dbname="postgres",
+            user="postgres",
+            password="Narwhals@1",
+        )
+        # Optional: if you want dictionary-like rows:
+        # cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         return conn
-    except mysql.connector.Error as err:
-        print(f"Error connecting to MySQL: {err}")
+    except psycopg2.Error as e:
+        print("Error connecting to Postgres:", e)
         return None
 
 
