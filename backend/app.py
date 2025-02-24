@@ -24,7 +24,6 @@ app.config["SECRET_KEY"] = os.environ.get(
     "SECRET_KEY", "dev_secret_key"
 )  # Needed for flash messages
 socketio = SocketIO(app, cors_allowed_origins="*")
-# Determine the directory where app.py is located.
 
 
 def get_db_connection():
@@ -34,7 +33,7 @@ def get_db_connection():
             port="5432",
             dbname="postgres",
             user="postgres",
-            password="Narwhals@1",
+            password="Narwhals@123",
         )
         # Optional: if you want dictionary-like rows:
         # cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
@@ -97,13 +96,13 @@ def register():
             form_data["error_dob"] = "Invalid date of birth!"
             return render_template("register.html", form_data=form_data)
 
-        # Connect to MySQL
+        # Connect to PostgreSQL
         conn = get_db_connection()
         if conn is None:
             form_data["error_general"] = "Database connection error!"
             return render_template("register.html", form_data=form_data)
 
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         # Check if the username already exists (case-insensitive)
         check_user_query = "SELECT id FROM users WHERE LOWER(username) = %s"
@@ -128,8 +127,8 @@ def register():
             "INSERT INTO users (username, password, email, dob) VALUES (%s, %s, %s, %s)"
         )
         cursor.execute(insert_query, (lowercase_username, password, email, dob))
+        new_user_id = cursor.fetchone()["id"]
         conn.commit()
-        new_user_id = cursor.lastrowid
 
         cursor.close()
         conn.close()
@@ -163,7 +162,7 @@ def login():
             form_data["error_login"] = "Database connection error!"
             return render_template("login.html", form_data=form_data)
 
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
         # 4. Query user by username/email
         check_query = """
@@ -269,6 +268,7 @@ def new_user():
             update_query = "UPDATE users SET profile_pic = %s WHERE id = %s"
             cursor.execute(update_query, (db_file_path, user_id))
             conn.commit()
+
             cursor.close()
             conn.close()
 
@@ -287,7 +287,7 @@ def user_home():
 
     user_id = session["user_id"]
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     # Fetch username & profile pic
     cursor.execute("SELECT username, profile_pic FROM users WHERE id = %s", (user_id,))
@@ -328,7 +328,7 @@ def get_friend_requests():
     user_id = session["user_id"]
 
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     # All pending friend requests for this user
     cursor.execute(
         """
@@ -419,8 +419,8 @@ def send_friend_request():
     conn = get_db_connection()
     if conn is None:
         return jsonify({"error": "Database connection error"}), 500
-    cursor = conn.cursor(dictionary=True)
 
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     # Look up the friend's user ID
     cursor.execute(
         "SELECT id FROM users WHERE LOWER(username) = %s", (friend_username,)
@@ -496,7 +496,7 @@ def search_users():
     if not conn:
         return jsonify({"error": "Database connection error"}), 500
 
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     # We'll do 'query%' so it finds users that start with query
     like_query = query + "%"
     sql = """
@@ -508,6 +508,7 @@ def search_users():
     """
     cursor.execute(sql, (like_query, user_id))
     rows = cursor.fetchall()
+
     cursor.close()
     conn.close()
 
@@ -526,8 +527,8 @@ def get_friends():
     conn = get_db_connection()
     if not conn:
         return jsonify({"error": "Database connection error"}), 500
-    cursor = conn.cursor(dictionary=True)
 
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     # Return 'friends' sorted by last_interaction DESC (newest first)
     cursor.execute(
         """
@@ -564,8 +565,8 @@ def get_messages():
     conn = get_db_connection()
     if not conn:
         return jsonify({"error": "Database connection error"}), 500
-    cursor = conn.cursor(dictionary=True)
 
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     # 4. Fetch all messages between current_user and friend, sorted by created_at ascending
     sql = """
         SELECT
@@ -611,16 +612,15 @@ def handle_send_message(data):
         print("DB connection error in send_message socket event")
         return
 
-    cursor = conn.cursor(dictionary=True)
-
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     # Insert the new message
     insert_sql = """
         INSERT INTO messages (sender_id, receiver_id, content)
         VALUES (%s, %s, %s)
     """
     cursor.execute(insert_sql, (sender_id, friend_id, content))
+    new_id = cursor.fetchone()["id"]
     conn.commit()
-    new_id = cursor.lastrowid
 
     # 3) Optionally update 'last_interaction'
     update_sql = """
