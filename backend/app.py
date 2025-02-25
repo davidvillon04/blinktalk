@@ -29,11 +29,12 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 def get_db_connection():
     try:
         conn = psycopg2.connect(
-            host="db.qlilmykbmctvueeuvosd.supabase.co",
-            port="5432",
             dbname="postgres",
-            user="postgres",
+            user="postgres.qlilmykbmctvueeuvosd",
             password="Narwhals@123",
+            host="aws-0-us-east-1.pooler.supabase.com",
+            port="5432",
+            sslmode="require"
         )
         # Optional: if you want dictionary-like rows:
         # cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
